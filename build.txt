@@ -1,0 +1,5 @@
+displayName = Water Effects
+author = Blockaroz
+version = 0.5
+includeSource = true
+side = Client

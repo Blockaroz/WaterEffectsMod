@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!-- Import tModLoader mod properties -->
+	<Import Project="..\tModLoader.targets" />
+
+	<!-- General -->
+	<PropertyGroup>
+		
+	</PropertyGroup>
+	<ItemGroup>
+	  <None Remove="Assets\Effects\ColorCutout.fx" />
+	  <None Remove="Assets\Effects\LavaCausticEffect - Copy.fx" />
+	  <None Remove="Assets\Effects\ReflectionMapEffect.fx" />
+	  <None Remove="Assets\Effects\Screen.fx" />
+	  <None Remove="Assets\Textures\BlackTileSlope.png" />
+	  <None Remove="Assets\Textures\Noise\WaterNoise_0.png" />
+	</ItemGroup>
+
+	<!-- References -->
+
+</Project>

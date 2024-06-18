@@ -1,0 +1,20 @@
+Configs: {
+	WaterConfig: {
+		DisplayName: Liquid Effects Config
+
+		waterReflectionsEnabled: {
+			Label: Water Reflections Enabled
+			Tooltip: ""
+		}
+
+		waterReflectionBlockDepth: {
+			Label: Water Reflection Block Depth
+			Tooltip: ""
+		}
+
+		waterReflectionMultiplierOverride: {
+			Label: water Reflection Multiplier Override
+			Tooltip: ""
+		}
+	}
+}
