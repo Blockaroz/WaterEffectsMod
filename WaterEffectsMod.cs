@@ -20,8 +20,6 @@ public class WaterEffectsMod : Mod
 
         AllAssets.Load();
 
-        Filters.Scene["WaterEffects:Reflections"] = new Filter(new ScreenShaderData(AllAssets.ReflectionEffect[0], "ShaderPass"), EffectPriority.VeryLow);
-        Filters.Scene["WaterEffects:Reflections"].Load();
-        Filters.Scene["WaterEffects:Reflections"].Deactivate();
+        Filters.Scene["WaterEffects:Reflections"] = new Filter(new ScreenShaderData(AllAssets.ReflectionEffect[0], "ShaderPass"), EffectPriority.VeryHigh);
     }
 }

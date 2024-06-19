@@ -22,7 +22,11 @@ public abstract class LiquidAddon : ILoadable
 
     public virtual Mod Mod { get; private set; }
 
-    public virtual bool AddToColorRendering => true;
+    public virtual bool AddToColorRendering => HasVisuals;
+
+    public virtual bool HasVisuals => true;
+
+    public virtual bool HasAudio => true;
 
     public virtual void OnLoad() { }
 
@@ -40,6 +44,8 @@ public abstract class LiquidAddon : ILoadable
     }
 
     public virtual void Update() { }
+
+    public virtual void UpdateAudio() { }
 
     public void Unload()
     {

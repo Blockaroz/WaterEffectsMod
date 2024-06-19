@@ -19,63 +19,96 @@ public class WaterReflectionAddon : LiquidAddon
 {
     public override int LiquidType => LiquidID.Water;
 
-    public override Color LiquidColor => LiquidAddonSystem.liquidColors[LiquidType];
+    public override Color LiquidColor => Color.Blue;
 
     public override bool AddToColorRendering => false;
 
-    //TODO: Make static?
-    public RenderTarget2D reflectionTarget;
+    public override bool HasVisuals => true;
+
+    public override bool HasAudio => false;
+
+    public static RenderTarget2D reflectionTarget;
+    public static RenderTarget2D reflectionTargetSwap;
 
     public override void DrawTarget()
     {
         base.DrawTarget();
 
-        if (reflectionTarget == null || Main.screenWidth != currentWidth || Main.screenHeight != currentHeight)
+        if (reflectionTarget == null || reflectionTargetSwap == null || Main.screenWidth != currentWidth || Main.screenHeight != currentHeight)
         {
             reflectionTarget = new RenderTarget2D(Main.instance.GraphicsDevice, Main.screenWidth, Main.screenHeight, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None);
+            reflectionTargetSwap = new RenderTarget2D(Main.instance.GraphicsDevice, Main.screenWidth, Main.screenHeight, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None);
             currentWidth = Main.screenWidth;
             currentHeight = Main.screenHeight;
             return;
         }
 
-        Main.instance.GraphicsDevice.SetRenderTarget(reflectionTarget);
-        Main.instance.GraphicsDevice.Clear(Color.Transparent);
+        if (WaterConfig.ReflectionsEnabled)
+        {
+            Main.instance.GraphicsDevice.SetRenderTarget(reflectionTargetSwap);
+            Main.instance.GraphicsDevice.Clear(Color.Transparent);
 
-        int screenLeft = (int)Math.Floor(Main.screenPosition.X / 16f - 1);
-        int screenRight = (int)Math.Ceiling((Main.screenPosition.X + Main.screenWidth) / 16f + 1);
-        int screenTop = (int)Math.Floor(Main.screenPosition.Y / 16f - 1);
-        int screenBottom = (int)Math.Ceiling((Main.screenPosition.Y + Main.screenHeight) / 16f + 1);
+            LiquidUtils.GetAreaForDrawing(out int left, out int right, out int top, out int bottom);
 
-        LiquidUtils.DrawReflectionMapInArea(screenLeft, screenRight, screenTop, screenBottom, WaterConfig.Instance.waterReflectionBlockDepth);
+            LiquidUtils.DrawReflectionMapInArea(left, right, top, bottom, WaterConfig.Instance.reflectionBlockDepth);
 
-        Main.instance.GraphicsDevice.SetRenderTarget(null);
+            Main.instance.GraphicsDevice.SetRenderTarget(reflectionTarget);
+            Main.instance.GraphicsDevice.Clear(Color.Transparent);
+
+            Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null);
+
+            if (Main.WaveQuality > 0)
+            {
+                Filters.Scene["WaterDistortion"].GetShader().Apply();
+            }
+
+            Main.spriteBatch.Draw(reflectionTargetSwap, Vector2.Zero, Color.White);
+
+            Main.spriteBatch.End();
+
+            Main.instance.GraphicsDevice.SetRenderTarget(null);
+
+            if (!Main.drawToScreen && overlayTarget != null && reflectionTarget != null)
+            {
+                Filters.Scene["WaterDistortion"].GetShader().UseImage(AllAssets.Noise[2].Value);
+
+                if (!Filters.Scene["WaterEffects:Reflections"].IsActive())
+                    Filters.Scene.Activate("WaterEffects:Reflections", default);
+
+                Filters.Scene["WaterEffects:Reflections"].GetShader().UseOpacity(WaterConfig.ReflectionsEnabled ? 1f : 0f);
+
+                Effect effect = Filters.Scene["WaterEffects:Reflections"].GetShader().Shader;
+                effect.Parameters["uImageSize"].SetValue(Main.ScreenSize.ToVector2());
+                effect.Parameters["uScreenCutout"].SetValue(overlayTarget);
+                effect.Parameters["uReflectionMap"].SetValue(reflectionTarget);
+                effect.Parameters["uDepth"].SetValue(WaterConfig.Instance.reflectionBlockDepth);
+                effect.Parameters["uClearness"].SetValue(_clarity);
+            }
+        }
     }
 
     public override void Draw()
     {
-        Filters.Scene["WaterDistortion"].GetShader().UseImage(AllAssets.Noise[2].Value);
 
-        if (!Main.drawToScreen && overlayTarget != null && reflectionTarget != null)
-        {
-            Effect effect = Filters.Scene["WaterEffects:Reflections"].GetShader().Shader;
-            effect.Parameters["uImageSize"].SetValue(Main.ScreenSize.ToVector2());
-            effect.Parameters["uScreenImage"].SetValue(reflectionTarget);
-            effect.Parameters["uScreenCutout"].SetValue(overlayTarget);
-            effect.Parameters["uDepth"].SetValue(WaterConfig.Instance.waterReflectionBlockDepth);
-            effect.Parameters["uClearness"].SetValue(0.2f);
-        }
     }
 
     private float _clarity;
 
     public override void Update()
     {
-        if (!Filters.Scene["WaterEffects:Reflections"].IsInUse())
-        {
-            Filters.Scene["WaterEffects:Reflections"] = new Filter(new ScreenShaderData(AllAssets.ReflectionEffect[0], "ShaderPass"), EffectPriority.VeryLow);
-            Filters.Scene.Activate("WaterEffects:Reflections", default);
-        }
+        float clarityTarget = 0.4f;
 
-        Filters.Scene["WaterEffects:Reflections"].GetShader().UseOpacity(WaterConfig.Instance.waterReflectionsEnabled ? 1f : 0f);
+        if (Main.bloodMoon)
+            clarityTarget = 0.15f;
+
+        if (Main.LocalPlayer.ZoneShimmer)
+            clarityTarget = 0.55f;
+
+        if (Main.LocalPlayer.ZoneWaterCandle)
+            clarityTarget *= 0.65f;
+        if (Main.LocalPlayer.ZonePeaceCandle)
+            clarityTarget *= 1.35f;
+
+        _clarity = MathHelper.Lerp(_clarity, clarityTarget, 0.1f);
     }
 }

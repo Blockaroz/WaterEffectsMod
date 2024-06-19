@@ -15,7 +15,6 @@ public static class AllAssets
     public static void Load()
     {
         string assetPath = $"{nameof(WaterEffectsMod)}/Assets";
-        BlackTileSlope = ModContent.Request<Texture2D>($"{assetPath}/Textures/BlackTileSlope", AssetRequestMode.ImmediateLoad);
         Noise = [
             ModContent.Request<Texture2D>($"{assetPath}/Textures/Noise/LavaNoise_0", AssetRequestMode.ImmediateLoad),
             ModContent.Request<Texture2D>($"{assetPath}/Textures/Noise/LavaNoise_1", AssetRequestMode.ImmediateLoad),
@@ -23,6 +22,7 @@ public static class AllAssets
 
         BlankScreenEffect = ModContent.Request<Effect>($"{assetPath}/Effects/Screen", AssetRequestMode.ImmediateLoad);
         ColorCutoutEffect = ModContent.Request<Effect>($"{assetPath}/Effects/ColorCutout", AssetRequestMode.ImmediateLoad);
+        ImageMaskEffect = ModContent.Request<Effect>($"{assetPath}/Effects/ImageMask", AssetRequestMode.ImmediateLoad);
        
         ReflectionMapEffect = ModContent.Request<Effect>($"{assetPath}/Effects/ReflectionMapEffect", AssetRequestMode.ImmediateLoad);
         ReflectionEffect = [
@@ -32,11 +32,11 @@ public static class AllAssets
         ScreenTarget.Load();
     }
 
-    public static Asset<Texture2D> BlackTileSlope;
     public static Asset<Texture2D>[] Noise;
 
     public static Asset<Effect> BlankScreenEffect;
     public static Asset<Effect> ColorCutoutEffect;
+    public static Asset<Effect> ImageMaskEffect;
 
     public static Asset<Effect> ReflectionMapEffect;
     public static Asset<Effect>[] ReflectionEffect;

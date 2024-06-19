@@ -1,19 +1,34 @@
 Configs: {
 	WaterConfig: {
-		DisplayName: Liquid Effects Config
+		DisplayName: Water Config
 
-		waterReflectionsEnabled: {
-			Label: Water Reflections Enabled
+		movementFizz: {
+			Label: movement Fizz
 			Tooltip: ""
 		}
 
-		waterReflectionBlockDepth: {
-			Label: Water Reflection Block Depth
+		ambientFizz: {
+			Label: ambient Fizz
 			Tooltip: ""
 		}
 
-		waterReflectionMultiplierOverride: {
-			Label: water Reflection Multiplier Override
+		reflectionBlockDepth: {
+			Label: reflection Block Depth
+			Tooltip: ""
+		}
+
+		additionalAudioEffects: {
+			Label: additional Audio Effects
+			Tooltip: ""
+		}
+
+		waterEffectStyle: {
+			Label: water Effect Style
+			Tooltip: ""
+		}
+
+		lavaEffectStyle: {
+			Label: lava Effect Style
 			Tooltip: ""
 		}
 	}

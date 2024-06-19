@@ -13,14 +13,25 @@ public class WaterConfig : ModConfig
 {
     public static WaterConfig Instance => ModContent.GetInstance<WaterConfig>();
 
+    public static bool ReflectionsEnabled => Instance.reflectionBlockDepth > 1;
+
     public override ConfigScope Mode => ConfigScope.ClientSide;
 
     [DefaultValue(true)]
-    public bool waterReflectionsEnabled;
+    public bool movementFizz;    
+    
+    [DefaultValue(true)]
+    public bool ambientFizz;
 
     [DefaultValue(24)]
-    public int waterReflectionBlockDepth;
+    public int reflectionBlockDepth;
 
-    [DefaultValue(0f)]
-    public float waterReflectionMultiplierOverride;
+    [DefaultValue(true)]
+    public bool additionalAudioEffects;
+
+    [DefaultValue(0)]
+    public int waterEffectStyle;
+
+    [DefaultValue(0)]
+    public int lavaEffectStyle;
 }

@@ -2,6 +2,7 @@ Adds extra visual features to liquids.
 
 Currently:
 - Reflections in water with different available styles
-- Lava caustics
+- Lava effects
+- Fizz from moving things
 
 Note: Requires Color/White lighting.

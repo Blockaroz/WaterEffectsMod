@@ -46,19 +46,7 @@ public class LavaAddon : LiquidAddon
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.Transform);
 
-            //Effect lavaEffect = AllAssets.LavaCausticEffect.Value;
-            //lavaEffect.Parameters["uScreenSize"].SetValue(Main.ScreenSize.ToVector2());
-            //lavaEffect.Parameters["uScreenPosition"].SetValue(Main.screenPosition * new Vector2(1f / Main.screenWidth, 1f / Main.screenWidth));
-            //lavaEffect.Parameters["uTexture0"].SetValue(AllAssets.Noise[1].Value);
-            //lavaEffect.Parameters["uTexture1"].SetValue(AllAssets.Noise[0].Value);
-            //lavaEffect.Parameters["uTime"].SetValue(Main.GlobalTimeWrappedHourly / 600f % 1f);
-            //lavaEffect.Parameters["uColor"].SetValue(new Color(210, 30, 0, 30).ToVector4() * 0.7f);
-            //lavaEffect.Parameters["uColor2"].SetValue(new Color(255, 120, 10, 20).ToVector4());
-
-            //lavaEffect.Parameters["uSize"].SetValue(new Vector2(1f, 1.5f) * 0.75f);
-            //lavaEffect.CurrentTechnique.Passes[0].Apply();
-
-            //Main.spriteBatch.Draw(overlayTarget, Vector2.Zero, Color.White);
+            Main.spriteBatch.Draw(LiquidAddonSystem.liquidOverlayTarget, Vector2.Zero, Color.White);
 
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.Transform);
