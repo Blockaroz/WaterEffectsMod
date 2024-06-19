@@ -11,6 +11,7 @@ using Terraria;
 using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.Graphics;
+using Terraria.Graphics.CameraModifiers;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -63,7 +64,8 @@ public class LiquidAddonSystem : ModSystem
 
     public static RenderTarget2D liquidOverlayTargetSwap;
     public static RenderTarget2D liquidOverlayTarget;
-    public static RenderTarget2D liquidEdgesMaskTarget;
+    public static RenderTarget2D tileMaskTarget;
+    public static RenderTarget2D backWaterTargetFixed;
 
     private int currentWidth;
     private int currentHeight;
@@ -74,67 +76,71 @@ public class LiquidAddonSystem : ModSystem
 
         if (!Main.drawToScreen && !Main.gameMenu)
         {
-            if (liquidOverlayTarget == null || liquidOverlayTargetSwap == null || liquidEdgesMaskTarget == null || Main.screenWidth != currentWidth || Main.screenHeight != currentHeight)
+            Vector2 drawOffset = Main.screenPosition;
+
+            int width = LiquidUtils.DefaultTargetWidth;
+            int height = LiquidUtils.DefaultTargetHeight;
+            if (liquidOverlayTarget == null || liquidOverlayTargetSwap == null || tileMaskTarget == null || backWaterTargetFixed == null || width != currentWidth || height != currentHeight)
             {
-                liquidOverlayTarget = new RenderTarget2D(Main.instance.GraphicsDevice, Main.screenWidth, Main.screenWidth, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None);
-                liquidOverlayTargetSwap = new RenderTarget2D(Main.instance.GraphicsDevice, Main.screenWidth, Main.screenWidth, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None);
-                liquidEdgesMaskTarget = new RenderTarget2D(Main.instance.GraphicsDevice, Main.screenWidth, Main.screenWidth, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None);
-                currentWidth = Main.screenWidth;
-                currentHeight = Main.screenHeight;
+                liquidOverlayTarget = new RenderTarget2D(Main.instance.GraphicsDevice, width, height, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None);
+                liquidOverlayTargetSwap = new RenderTarget2D(Main.instance.GraphicsDevice, width, height, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None);
+                tileMaskTarget = new RenderTarget2D(Main.instance.GraphicsDevice, width, height, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None);
+                backWaterTargetFixed = new RenderTarget2D(Main.instance.GraphicsDevice, width, height, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None);
+                
+                currentWidth = width;
+                currentHeight = height;
                 return;
             }
-
-            LiquidUtils.GetAreaForDrawing(out int left, out int right, out int top, out int bottom);
 
             Main.instance.GraphicsDevice.SetRenderTarget(liquidOverlayTargetSwap);
             Main.instance.GraphicsDevice.Clear(Color.Transparent);
 
-            Main.tileBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null);
+            Main.tileBatch.Begin();
 
-            Vector2 drawOffset = Main.screenPosition;
-            HashSet<Point> tilesToDrawForMask = new HashSet<Point>();
+            LiquidUtils.GetAreaForDrawing(out int left, out int right, out int top, out int bottom);
 
-            for (int j = top; j < bottom; j++)
+            HashSet<Point> tileMaskPoints = new HashSet<Point>();
+
+            for (int i = left; i < right; i++)
             {
-                for (int i = left; i < right; i++)
+                for (int j = top; j < bottom; j++)
                 {
                     if (!WorldGen.InWorld(i, j))
                         continue;
 
-                    if (Main.tile[i, j].LiquidAmount > 0)
+                    if (Main.tile[i, j].LiquidAmount > 0 && liquidColors.ContainsKey(Main.tile[i, j].LiquidType))
                     {
-                        int liquidType = Main.tile[i, j].LiquidType;
+                        int startAmount = Main.tile[i, j].LiquidAmount;
+                        int startType = Main.tile[i, j].LiquidType;
                         int k = 0;
                         while (true)
                         {
                             bool stop = false;
-                            if (!WorldGen.InWorld(i + k, j))
+                            if (!WorldGen.InWorld(i, j + k) || (j + k > bottom))
                             {
                                 k--;
                                 stop = true;
                             }
 
-                            if (Main.tile[i + k, j].LiquidAmount <= 0 || Main.tile[i + k, j].LiquidType != liquidType || stop)
+                            if (Main.tile[i, j + k].LiquidAmount <= 0 || Main.tile[i, j + k].LiquidAmount != startAmount || Main.tile[i, j + k].LiquidType != startType || stop)
                             {
-                                int liquidHeight = Math.Clamp((int)Math.Ceiling(Main.tile[i, j].LiquidAmount / 255f * 16f), 4, 16);
-                                int size = k * 16;
+                                int liquidHeight = Math.Max(4, (int)Math.Ceiling(Main.tile[i, j].LiquidAmount / 255f * 16f));
 
-                                if (WorldGen.InWorld(i, j - 1))
+                                int size = (k - 1) * 16;
+
+                                const int extend = 4;
+                                if (!LiquidUtils.IsSurfaceLiquid(i, j))
                                 {
-                                    const int extend = 4;
-                                    if (liquidHeight >= 16 && (Main.tile[i, j - 1].LiquidAmount > 0 || WorldGen.SolidTile(i, j - 1)))
-                                    {
-                                        Main.tileBatch.Draw(TextureAssets.BlackTile.Value, new Vector2(i * 16 - extend, j * 16 + 16 - liquidHeight) - drawOffset, new Rectangle(0, 0, size + 2 * extend, liquidHeight), new VertexColors(liquidColors[Main.tile[i, j].LiquidType]), Vector2.Zero, 1f, 0);
-                                        Main.tileBatch.Draw(TextureAssets.BlackTile.Value, new Vector2(i * 16, j * 16 + 16 - liquidHeight - extend) - drawOffset, new Rectangle(0, 0, size, liquidHeight + 2 * extend), new VertexColors(liquidColors[Main.tile[i, j].LiquidType]), Vector2.Zero, 1f, 0);
-                                    }
-                                    else
-                                    {
-                                        Main.tileBatch.Draw(TextureAssets.BlackTile.Value, new Vector2(i * 16 - extend, j * 16 + 16 - liquidHeight) - drawOffset, new Rectangle(0, 0, size + 2 * extend, liquidHeight), new VertexColors(liquidColors[Main.tile[i, j].LiquidType]), Vector2.Zero, 1f, 0);
-                                        Main.tileBatch.Draw(TextureAssets.BlackTile.Value, new Vector2(i * 16, j * 16 + 16 - liquidHeight) - drawOffset, new Rectangle(0, 0, size, liquidHeight + extend), new VertexColors(liquidColors[Main.tile[i, j].LiquidType]), Vector2.Zero, 1f, 0);
-                                    }
+                                    Main.tileBatch.Draw(TextureAssets.BlackTile.Value, new Vector2(i * 16 - extend, j * 16 + 16 - liquidHeight) - drawOffset, new Rectangle(0, 0, 16 + 2 * extend, size + liquidHeight), new VertexColors(liquidColors[Main.tile[i, j].LiquidType]), Vector2.Zero, 1f, 0);
+                                    Main.tileBatch.Draw(TextureAssets.BlackTile.Value, new Vector2(i * 16, j * 16 + 16 - liquidHeight - extend) - drawOffset, new Rectangle(0, 0, 16, size + liquidHeight + 2 * extend), new VertexColors(liquidColors[Main.tile[i, j].LiquidType]), Vector2.Zero, 1f, 0);
+                                }
+                                else
+                                {
+                                    Main.tileBatch.Draw(TextureAssets.BlackTile.Value, new Vector2(i * 16 - extend, j * 16 + 16 - liquidHeight) - drawOffset, new Rectangle(0, 0, 16 + 2 * extend, size + liquidHeight), new VertexColors(liquidColors[Main.tile[i, j].LiquidType]), Vector2.Zero, 1f, 0);
+                                    Main.tileBatch.Draw(TextureAssets.BlackTile.Value, new Vector2(i * 16, j * 16 + 16 - liquidHeight) - drawOffset, new Rectangle(0, 0, 16, size + liquidHeight + extend), new VertexColors(liquidColors[Main.tile[i, j].LiquidType]), Vector2.Zero, 1f, 0);
                                 }
 
-                                i += k - 1;
+                                j += k - 1;
 
                                 break;
                             }
@@ -142,61 +148,51 @@ public class LiquidAddonSystem : ModSystem
                         }
                     }
 
-                    if (Main.tile[i, j].HasTile)
+                    if (WorldGen.SolidOrSlopedTile(i, j))
                     {
-                        int liquidHeight = 0;
                         int liquidType = -1;
                         bool foundValid = false;
 
-                        if (!foundValid && WorldGen.InWorld(i - 1, j))
-                        {
-                            if (Main.tile[i - 1, j].LiquidAmount > 0)
-                            {
-                                liquidType = Main.tile[i - 1, j].LiquidType;
-                                liquidHeight = Math.Clamp((int)Math.Ceiling(Main.tile[i - 1, j].LiquidAmount / 255f * 16f), 4, 16);
-                                foundValid = true;
-                            }
-                        }
-
-                        if (!foundValid && WorldGen.InWorld(i + 1, j))
-                        {
-                            if (Main.tile[i + 1, j].LiquidAmount > 0)
-                            {
-                                liquidType = Main.tile[i + 1, j].LiquidType;
-                                liquidHeight = Math.Clamp((int)Math.Ceiling(Main.tile[i + 1, j].LiquidAmount / 255f * 16f), 4, 16);
-                                foundValid = true;
-                            }
-                        }
-
-                        if (!foundValid && WorldGen.InWorld(i, j - 1))
-                        {
-                            if (Main.tile[i, j - 1].LiquidAmount > 0)
-                            {
-                                liquidType = Main.tile[i, j - 1].LiquidType;
-                                liquidHeight = 16;
-                                foundValid = true;
-                            }
-                        }
-
-                        if (!foundValid && WorldGen.InWorld(i, j + 1))
+                        if (WorldGen.InWorld(i, j + 1))
                         {
                             if (Main.tile[i, j + 1].LiquidAmount >= 255)
                             {
                                 liquidType = Main.tile[i, j + 1].LiquidType;
-                                liquidHeight = 16;
                                 foundValid = true;
                             }
                         }
 
-                        if (foundValid)
+                        if (WorldGen.InWorld(i, j - 1))
                         {
-                            if (Main.tile[i, j].IsHalfBlock && liquidHeight > 8)
-                                Main.tileBatch.Draw(TextureAssets.BlackTile.Value, new Vector2(i * 16 - 2, j * 16 + 16 - liquidHeight) - drawOffset, new Rectangle(0, 0, 20, Math.Min(liquidHeight, 8) + 2), new VertexColors(liquidColors[liquidType]), Vector2.Zero, 1f, 0);
-                            else if (Main.tile[i, j].Slope != 0)
-                                Main.tileBatch.Draw(TextureAssets.BlackTile.Value, new Vector2(i * 16, j * 16 + 16 - liquidHeight) - drawOffset, new Rectangle(((int)Main.tile[i, j].Slope - 1) * 18, 16 - liquidHeight, 16, liquidHeight), new VertexColors(liquidColors[liquidType]), Vector2.Zero, 1f, 0);
+                            if (Main.tile[i, j - 1].LiquidAmount > 0)
+                            {
+                                liquidType = Main.tile[i, j - 1].LiquidType;
+                                foundValid = true;
+                            }
+                        }
 
-                            if (WorldGen.SolidOrSlopedTile(i, j))
-                                tilesToDrawForMask.Add(new Point(i, j));
+                        if (WorldGen.InWorld(i - 1, j))
+                        {
+                            if (Main.tile[i - 1, j].LiquidAmount > 0)
+                            {
+                                liquidType = Main.tile[i - 1, j].LiquidType;
+                                foundValid = true;
+                            }
+                        }
+
+                        if (WorldGen.InWorld(i + 1, j))
+                        {
+                            if (Main.tile[i + 1, j].LiquidAmount > 0)
+                            {
+                                liquidType = Main.tile[i + 1, j].LiquidType;
+                                foundValid = true;
+                            }
+                        }
+
+                        if (foundValid && liquidColors.ContainsKey(liquidType))
+                        {
+                            Main.tileBatch.Draw(TextureAssets.BlackTile.Value, new Vector2(i * 16, j * 16) - drawOffset, new Rectangle(0, 0, 16, 16), new VertexColors(liquidColors[liquidType]), Vector2.Zero, 1f, 0);
+                            tileMaskPoints.Add(new Point(i, j));
                         }
                     }
                 }
@@ -204,12 +200,12 @@ public class LiquidAddonSystem : ModSystem
 
             Main.tileBatch.End();
 
-            Main.instance.GraphicsDevice.SetRenderTarget(liquidEdgesMaskTarget);
+            Main.instance.GraphicsDevice.SetRenderTarget(tileMaskTarget);
             Main.instance.GraphicsDevice.Clear(Color.Transparent);
 
-            Main.tileBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null);
+            Main.tileBatch.Begin();
 
-            foreach (Point point in tilesToDrawForMask)
+            foreach (Point point in tileMaskPoints)
             {
                 if (WorldGen.InWorld(point.X, point.Y, 1))
                     LiquidUtils.DrawSingleTile(point.X, point.Y, drawOffset);
@@ -217,18 +213,25 @@ public class LiquidAddonSystem : ModSystem
 
             Main.tileBatch.End();
 
+            Main.instance.GraphicsDevice.SetRenderTarget(backWaterTargetFixed);
+            Main.instance.GraphicsDevice.Clear(Color.Transparent);
+
+            Main.spriteBatch.Begin();
+
+            Main.spriteBatch.Draw(Main.instance.backWaterTarget, Main.sceneBackgroundPos - Main.screenPosition, Color.White);
+            Main.spriteBatch.End();
+
             Main.instance.GraphicsDevice.SetRenderTarget(liquidOverlayTarget);
             Main.instance.GraphicsDevice.Clear(Color.Transparent);
 
-            Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null);
-
+            Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, null);
             Effect mask = AllAssets.ImageMaskEffect.Value;
-            mask.Parameters["uMaskImage"].SetValue(liquidEdgesMaskTarget);
-            mask.Parameters["uMaskSize"].SetValue(liquidEdgesMaskTarget.Size());
+            mask.Parameters["uMaskAdd"].SetValue(backWaterTargetFixed);
+            mask.Parameters["uMaskSubtract"].SetValue(tileMaskTarget);
+            mask.Parameters["inverse"].SetValue(false);
             mask.CurrentTechnique.Passes[0].Apply();
 
             Main.spriteBatch.Draw(liquidOverlayTargetSwap, Vector2.Zero, Color.White);
-
             Main.spriteBatch.End();
 
             Main.instance.GraphicsDevice.SetRenderTarget(null);

@@ -15,6 +15,8 @@ public class HoneyAddon : LiquidAddon
 
     public override Color LiquidColor => Color.Yellow;
 
+    public override bool AddToColorRendering => true;
+
     public override bool HasVisuals => false;
 
     public override bool HasAudio => false;

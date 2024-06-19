@@ -1,4 +1,4 @@
-displayName = Water Effects
+displayName = Blockaroz' Atmosphere
 author = Blockaroz
 version = 0.5
 includeSource = true

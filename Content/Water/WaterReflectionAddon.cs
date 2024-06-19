@@ -32,14 +32,29 @@ public class WaterReflectionAddon : LiquidAddon
 
     public override void DrawTarget()
     {
-        base.DrawTarget();
+        Main.instance.GraphicsDevice.SetRenderTarget(overlayTarget);
+        Main.instance.GraphicsDevice.Clear(Color.Transparent);
 
-        if (reflectionTarget == null || reflectionTargetSwap == null || Main.screenWidth != currentWidth || Main.screenHeight != currentHeight)
+        Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, null, Main.Transform);
+
+        Effect cutout = AllAssets.ColorCutoutEffect.Value;
+        cutout.Parameters["uCutoutColor"].SetValue(LiquidColor.ToVector4());
+        cutout.CurrentTechnique.Passes[0].Apply();
+
+        Main.spriteBatch.Draw(LiquidAddonSystem.liquidOverlayTarget, Vector2.Zero, LiquidAddonSystem.liquidOverlayTarget.Frame(), Color.White, 0, Vector2.Zero, 1, Main.GameViewMatrix.Effects, 0);
+
+        Main.spriteBatch.End();
+
+        Main.instance.GraphicsDevice.SetRenderTarget(null);
+
+        int width = LiquidUtils.DefaultTargetWidth;
+        int height = LiquidUtils.DefaultTargetHeight;
+        if (reflectionTarget == null || reflectionTargetSwap == null || width != currentWidth || height != currentHeight)
         {
-            reflectionTarget = new RenderTarget2D(Main.instance.GraphicsDevice, Main.screenWidth, Main.screenHeight, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None);
-            reflectionTargetSwap = new RenderTarget2D(Main.instance.GraphicsDevice, Main.screenWidth, Main.screenHeight, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None);
-            currentWidth = Main.screenWidth;
-            currentHeight = Main.screenHeight;
+            reflectionTarget = new RenderTarget2D(Main.instance.GraphicsDevice, width, height, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None);
+            reflectionTargetSwap = new RenderTarget2D(Main.instance.GraphicsDevice, width, height, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None);
+            currentWidth = width;
+            currentHeight = height;
             return;
         }
 
@@ -55,14 +70,9 @@ public class WaterReflectionAddon : LiquidAddon
             Main.instance.GraphicsDevice.SetRenderTarget(reflectionTarget);
             Main.instance.GraphicsDevice.Clear(Color.Transparent);
 
-            Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null);
+            Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, null, Main.Transform);
 
-            if (Main.WaveQuality > 0)
-            {
-                Filters.Scene["WaterDistortion"].GetShader().Apply();
-            }
-
-            Main.spriteBatch.Draw(reflectionTargetSwap, Vector2.Zero, Color.White);
+            Main.spriteBatch.Draw(reflectionTargetSwap, Vector2.Zero, reflectionTarget.Frame(), Color.White, 0, Vector2.Zero, 1f, Main.GameViewMatrix.Effects, 0);
 
             Main.spriteBatch.End();
 
@@ -71,11 +81,6 @@ public class WaterReflectionAddon : LiquidAddon
             if (!Main.drawToScreen && overlayTarget != null && reflectionTarget != null)
             {
                 Filters.Scene["WaterDistortion"].GetShader().UseImage(AllAssets.Noise[2].Value);
-
-                if (!Filters.Scene["WaterEffects:Reflections"].IsActive())
-                    Filters.Scene.Activate("WaterEffects:Reflections", default);
-
-                Filters.Scene["WaterEffects:Reflections"].GetShader().UseOpacity(WaterConfig.ReflectionsEnabled ? 1f : 0f);
 
                 Effect effect = Filters.Scene["WaterEffects:Reflections"].GetShader().Shader;
                 effect.Parameters["uImageSize"].SetValue(Main.ScreenSize.ToVector2());
@@ -89,20 +94,26 @@ public class WaterReflectionAddon : LiquidAddon
 
     public override void Draw()
     {
-
     }
 
     private float _clarity;
 
     public override void Update()
     {
-        float clarityTarget = 0.4f;
+        if (!Filters.Scene["WaterEffects:Reflections"].IsActive() && WaterConfig.ReflectionsEnabled)
+            Filters.Scene.Activate("WaterEffects:Reflections", default);
+        if (Filters.Scene["WaterEffects:Reflections"].IsActive() && !WaterConfig.ReflectionsEnabled)
+            Filters.Scene.Deactivate("WaterEffects:Reflections", default);
+
+        Filters.Scene["WaterEffects:Reflections"].GetShader().UseOpacity(WaterConfig.ReflectionsEnabled ? 1f : 0f);
+
+        float clarityTarget = 0.6f;
 
         if (Main.bloodMoon)
-            clarityTarget = 0.15f;
+            clarityTarget *= 0.5f;
 
         if (Main.LocalPlayer.ZoneShimmer)
-            clarityTarget = 0.55f;
+            clarityTarget = 0.7f;
 
         if (Main.LocalPlayer.ZoneWaterCandle)
             clarityTarget *= 0.65f;

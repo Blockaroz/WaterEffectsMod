@@ -14,6 +14,9 @@ namespace WaterEffectsMod;
 
 public static class LiquidUtils
 {
+    public static int DefaultTargetWidth => Main.screenWidth;
+    public static int DefaultTargetHeight => Main.screenHeight;//Main.instance.GraphicsDevice.PresentationParameters.BackBufferHeight + Main.offScreenRange * 2;
+
     public static void GetAreaForDrawing(out int left, out int right, out int top, out int bottom)
     {
         left = (int)Math.Floor(Main.screenPosition.X / 16f - 1);
@@ -116,7 +119,7 @@ public static class LiquidUtils
     {
         Effect mapEffect = AllAssets.ReflectionMapEffect.Value;
         mapEffect.Parameters["uDepth"].SetValue(maxDepth);
-        Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendStateForReflectionMap, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, mapEffect, Main.Transform);
+        Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendStateForReflectionMap, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, mapEffect);
         Vector2 drawOffset = Main.screenPosition;
         for (int i = left; i < right; i++)
         {
@@ -159,7 +162,7 @@ public static class LiquidUtils
                     int liquidHeight = (int)Math.Clamp(Main.tile[i, currentJ].LiquidAmount / 255f * 16f, 2, 16) + 1;
                     int trueDepth = Math.Min(poolDepth * 16 + liquidHeight, maxDepth * 16);
 
-                    Main.spriteBatch.Draw(TextureAssets.BlackTile.Value, new Vector2(i * 16 - 16, currentJ * 16 + 16 - liquidHeight) - drawOffset, new Rectangle(0, 0, 16 * 3, trueDepth), new Color(255, 255, 255, 0));
+                    Main.spriteBatch.Draw(TextureAssets.BlackTile.Value, new Vector2(i * 16 - 14, currentJ * 16 + 16 - liquidHeight - 2) - drawOffset, new Rectangle(0, 0, 16 * 3 - 4, trueDepth), new Color(255, 255, 255, 0));
 
                     currentJ += poolDepth;
                 }
@@ -173,7 +176,7 @@ public static class LiquidUtils
     {
         bool incomplete = Main.tile[i, j].LiquidAmount < 255 && Main.tile[i, j].LiquidAmount > 0;
         bool airAbove = Main.tile[i, j].LiquidAmount > 0 && Main.tile[i, j - 1].LiquidAmount <= 0 
-            && (!WorldGen.SolidTile(i, j - 1) || LiquidAddonSystem.blockTypesAllowsReflections.Any(n => n == Main.tile[i, j - 1].TileType));
+            && (!WorldGen.SolidOrSlopedTile(i, j - 1) || LiquidAddonSystem.blockTypesAllowsReflections.Any(n => n == Main.tile[i, j - 1].TileType));
         return incomplete || airAbove;
     }
 

@@ -53,11 +53,13 @@ public abstract class LiquidAddon : ILoadable
 
     public void CreateAndDrawTarget()
     {
-        if (overlayTarget == null || Main.screenWidth != currentWidth || Main.screenHeight != currentHeight)
+        int width = LiquidUtils.DefaultTargetWidth;
+        int height = LiquidUtils.DefaultTargetHeight;
+        if (overlayTarget == null || width != currentWidth || height != currentHeight)
         {
-            overlayTarget = new RenderTarget2D(Main.instance.GraphicsDevice, Main.screenWidth, Main.screenHeight, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None);
-            currentWidth = Main.screenWidth;
-            currentHeight = Main.screenHeight;
+            overlayTarget = new RenderTarget2D(Main.instance.GraphicsDevice, width, height, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None);
+            currentWidth = width;
+            currentHeight = height;
             return;
         }
 
@@ -74,7 +76,7 @@ public abstract class LiquidAddon : ILoadable
         Main.instance.GraphicsDevice.SetRenderTarget(overlayTarget);
         Main.instance.GraphicsDevice.Clear(Color.Transparent);
 
-        Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.Transform);
+        Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, null);
 
         Effect cutout = AllAssets.ColorCutoutEffect.Value;
         cutout.Parameters["uCutoutColor"].SetValue(LiquidColor.ToVector4());
