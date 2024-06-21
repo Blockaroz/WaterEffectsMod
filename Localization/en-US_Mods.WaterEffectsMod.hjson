@@ -31,5 +31,24 @@ Configs: {
 			Label: lava Effect Style
 			Tooltip: ""
 		}
+
+		vibranceEnabled: {
+			Label: vibrance Enabled
+			Tooltip: ""
+		}
+
+		vibrance: {
+			Label: vibrance
+			Tooltip: ""
+		}
+	}
+
+	LiquidStyles: {
+		Tooltip: ""
+		None.Label: None
+		Water_Mirror.Label: Water_ Mirror
+		Water_Shiny.Label: Water_ Shiny
+		Water_Spring.Label: Water_ Spring
+		Lava_Fancy.Label: Lava_ Fancy
 	}
 }

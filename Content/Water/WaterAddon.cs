@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Terraria.ID;
-using WaterEffectsMod.Common;
+using WaterEffectsMod.Common.LiquidAddons;
 
 namespace WaterEffectsMod.Content.Water;
 

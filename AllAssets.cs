@@ -15,31 +15,37 @@ public static class AllAssets
     public static void Load()
     {
         string assetPath = $"{nameof(WaterEffectsMod)}/Assets";
-        Noise = [
+        Texture_Noise = [
             ModContent.Request<Texture2D>($"{assetPath}/Textures/Noise/LavaNoise_0", AssetRequestMode.ImmediateLoad),
             ModContent.Request<Texture2D>($"{assetPath}/Textures/Noise/LavaNoise_1", AssetRequestMode.ImmediateLoad),
-            ModContent.Request<Texture2D>($"{assetPath}/Textures/Noise/WaterNoise_0", AssetRequestMode.ImmediateLoad) ];
+            ModContent.Request<Texture2D>($"{assetPath}/Textures/Noise/WaterNoise_0", AssetRequestMode.ImmediateLoad),
+            ModContent.Request<Texture2D>($"{assetPath}/Textures/Noise/WaterNoise_1", AssetRequestMode.ImmediateLoad),
+            ModContent.Request<Texture2D>($"{assetPath}/Textures/Noise/WaterNoise_2", AssetRequestMode.ImmediateLoad) ];
 
-        BlankScreenEffect = ModContent.Request<Effect>($"{assetPath}/Effects/Screen", AssetRequestMode.ImmediateLoad);
-        ColorCutoutEffect = ModContent.Request<Effect>($"{assetPath}/Effects/ColorCutout", AssetRequestMode.ImmediateLoad);
-        ImageMaskEffect = ModContent.Request<Effect>($"{assetPath}/Effects/ImageMask", AssetRequestMode.ImmediateLoad);
+        Effect_BlankScreen = ModContent.Request<Effect>($"{assetPath}/Effects/Screen", AssetRequestMode.ImmediateLoad);
+        Effect_ColorCutout = ModContent.Request<Effect>($"{assetPath}/Effects/ColorCutout", AssetRequestMode.ImmediateLoad);
+        Effect_ImageMask = ModContent.Request<Effect>($"{assetPath}/Effects/ImageMask", AssetRequestMode.ImmediateLoad);
+
+        Effect_ScreenVibrance = ModContent.Request<Effect>($"{assetPath}/Effects/ScreenVibrance", AssetRequestMode.ImmediateLoad);
        
-        ReflectionMapEffect = ModContent.Request<Effect>($"{assetPath}/Effects/ReflectionMapEffect", AssetRequestMode.ImmediateLoad);
-        ReflectionEffect = [
-            ModContent.Request<Effect>($"{assetPath}/Effects/Reflections/MirrorEffect", AssetRequestMode.ImmediateLoad)
+        Effect_ReflectionMap = ModContent.Request<Effect>($"{assetPath}/Effects/ReflectionMapEffect", AssetRequestMode.ImmediateLoad);
+        Effect_Reflection = [
+            ModContent.Request<Effect>($"{assetPath}/Effects/Reflections/BasicMirror", AssetRequestMode.ImmediateLoad),
+            ModContent.Request<Effect>($"{assetPath}/Effects/Reflections/ShinyWater", AssetRequestMode.ImmediateLoad)
             ];
 
         ScreenTarget.Load();
     }
 
-    public static Asset<Texture2D>[] Noise;
+    public static Asset<Texture2D>[] Texture_Noise;
 
-    public static Asset<Effect> BlankScreenEffect;
-    public static Asset<Effect> ColorCutoutEffect;
-    public static Asset<Effect> ImageMaskEffect;
+    public static Asset<Effect> Effect_BlankScreen;
+    public static Asset<Effect> Effect_ColorCutout;
+    public static Asset<Effect> Effect_ImageMask;
 
-    public static Asset<Effect> ReflectionMapEffect;
-    public static Asset<Effect>[] ReflectionEffect;
+    public static Asset<Effect> Effect_ScreenVibrance;
 
-    public static Asset<Effect> LavaCausticEffect;
+    public static Asset<Effect> Effect_ReflectionMap;
+    public static Asset<Effect>[] Effect_Reflection;
+    public static Asset<Effect> Effect_LavaOverlay;
 }

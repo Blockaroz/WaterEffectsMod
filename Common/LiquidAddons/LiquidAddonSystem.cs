@@ -15,7 +15,7 @@ using Terraria.Graphics.CameraModifiers;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace WaterEffectsMod.Common;
+namespace WaterEffectsMod.Common.LiquidAddons;
 
 public class LiquidAddonSystem : ModSystem
 {
@@ -86,7 +86,7 @@ public class LiquidAddonSystem : ModSystem
                 liquidOverlayTargetSwap = new RenderTarget2D(Main.instance.GraphicsDevice, width, height, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None);
                 tileMaskTarget = new RenderTarget2D(Main.instance.GraphicsDevice, width, height, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None);
                 backWaterTargetFixed = new RenderTarget2D(Main.instance.GraphicsDevice, width, height, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None);
-                
+
                 currentWidth = width;
                 currentHeight = height;
                 return;
@@ -116,7 +116,7 @@ public class LiquidAddonSystem : ModSystem
                         while (true)
                         {
                             bool stop = false;
-                            if (!WorldGen.InWorld(i, j + k) || (j + k > bottom))
+                            if (!WorldGen.InWorld(i, j + k) || j + k > bottom)
                             {
                                 k--;
                                 stop = true;
@@ -225,7 +225,7 @@ public class LiquidAddonSystem : ModSystem
             Main.instance.GraphicsDevice.Clear(Color.Transparent);
 
             Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, null);
-            Effect mask = AllAssets.ImageMaskEffect.Value;
+            Effect mask = AllAssets.Effect_ImageMask.Value;
             mask.Parameters["uMaskAdd"].SetValue(backWaterTargetFixed);
             mask.Parameters["uMaskSubtract"].SetValue(tileMaskTarget);
             mask.Parameters["inverse"].SetValue(false);

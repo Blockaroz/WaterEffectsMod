@@ -13,9 +13,13 @@
 	  <None Remove="Assets\Effects\LavaCausticEffect - Copy.fx" />
 	  <None Remove="Assets\Effects\MirrorEffect.fx" />
 	  <None Remove="Assets\Effects\ReflectionMapEffect.fx" />
-	  <None Remove="Assets\Effects\Reflections\MirrorEffect.fx" />
+	  <None Remove="Assets\Effects\Reflections\BasicMirror.fx" />
+	  <None Remove="Assets\Effects\Reflections\ShinyWater.fx" />
 	  <None Remove="Assets\Effects\Screen.fx" />
+	  <None Remove="Assets\Effects\ScreenVibrance.fx" />
 	  <None Remove="Assets\Textures\Noise\WaterNoise_0.png" />
+	  <None Remove="Assets\Textures\Noise\WaterNoise_1.png" />
+	  <None Remove="Assets\Textures\Noise\WaterNoise_2.png" />
 	</ItemGroup>
 	<ItemGroup>
 	  <Folder Include="Content\Shimmer\" />

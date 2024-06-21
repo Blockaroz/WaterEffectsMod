@@ -12,6 +12,7 @@ using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
 using WaterEffectsMod.Common;
+using WaterEffectsMod.Common.LiquidAddons;
 
 namespace WaterEffectsMod.Content.Water;
 
@@ -37,7 +38,7 @@ public class WaterReflectionAddon : LiquidAddon
 
         Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, null, Main.Transform);
 
-        Effect cutout = AllAssets.ColorCutoutEffect.Value;
+        Effect cutout = AllAssets.Effect_ColorCutout.Value;
         cutout.Parameters["uCutoutColor"].SetValue(LiquidColor.ToVector4());
         cutout.CurrentTechnique.Passes[0].Apply();
 
@@ -77,17 +78,37 @@ public class WaterReflectionAddon : LiquidAddon
             Main.spriteBatch.End();
 
             Main.instance.GraphicsDevice.SetRenderTarget(null);
+            Main.instance.GraphicsDevice.Clear(Color.Transparent);
 
             if (!Main.drawToScreen && overlayTarget != null && reflectionTarget != null)
             {
-                Filters.Scene["WaterDistortion"].GetShader().UseImage(AllAssets.Noise[2].Value);
-
                 Effect effect = Filters.Scene["WaterEffects:Reflections"].GetShader().Shader;
-                effect.Parameters["uImageSize"].SetValue(Main.ScreenSize.ToVector2());
-                effect.Parameters["uScreenCutout"].SetValue(overlayTarget);
-                effect.Parameters["uReflectionMap"].SetValue(reflectionTarget);
-                effect.Parameters["uDepth"].SetValue(WaterConfig.Instance.reflectionBlockDepth);
-                effect.Parameters["uClearness"].SetValue(_clarity);
+
+                switch (WaterConfig.Instance.waterEffectStyle)
+                {
+                    default:
+                    case LiquidStyles.Water_Mirror:
+
+                        effect.Parameters["uImageSize"].SetValue(Main.ScreenSize.ToVector2());
+                        effect.Parameters["uScreenCutout"].SetValue(overlayTarget);
+                        effect.Parameters["uReflectionMap"].SetValue(reflectionTarget);
+                        effect.Parameters["uDepth"].SetValue(WaterConfig.Instance.reflectionBlockDepth);
+                        effect.Parameters["uClearness"].SetValue(_clarity * 0.5f);
+
+                        break;
+
+                    case LiquidStyles.Water_Shiny:
+
+                        effect.Parameters["uImageSize"].SetValue(Main.ScreenSize.ToVector2());
+                        effect.Parameters["uScreenCutout"].SetValue(overlayTarget);
+                        effect.Parameters["uReflectionMap"].SetValue(reflectionTarget);
+                        effect.Parameters["uNoise0"].SetValue(AllAssets.Texture_Noise[3].Value);
+                        effect.Parameters["uNoise1"].SetValue(AllAssets.Texture_Noise[4].Value);
+                        effect.Parameters["uDepth"].SetValue(WaterConfig.Instance.reflectionBlockDepth);
+                        effect.Parameters["uClearness"].SetValue(_clarity * 0.5f);
+
+                        break;
+                }
             }
         }
     }
@@ -100,20 +121,13 @@ public class WaterReflectionAddon : LiquidAddon
 
     public override void Update()
     {
-        if (!Filters.Scene["WaterEffects:Reflections"].IsActive() && WaterConfig.ReflectionsEnabled)
-            Filters.Scene.Activate("WaterEffects:Reflections", default);
-        if (Filters.Scene["WaterEffects:Reflections"].IsActive() && !WaterConfig.ReflectionsEnabled)
-            Filters.Scene.Deactivate("WaterEffects:Reflections", default);
-
-        Filters.Scene["WaterEffects:Reflections"].GetShader().UseOpacity(WaterConfig.ReflectionsEnabled ? 1f : 0f);
-
-        float clarityTarget = 0.6f;
+        float clarityTarget = 0.5f;
 
         if (Main.bloodMoon)
             clarityTarget *= 0.5f;
 
         if (Main.LocalPlayer.ZoneShimmer)
-            clarityTarget = 0.7f;
+            clarityTarget = 0.6f;
 
         if (Main.LocalPlayer.ZoneWaterCandle)
             clarityTarget *= 0.65f;

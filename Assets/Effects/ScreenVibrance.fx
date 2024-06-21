@@ -22,8 +22,10 @@ float2 uZoom;
 
 float4 PixelShaderFunction(float2 coords : TEXCOORD0) : COLOR0
 {
+    float2 center = pow(coords * 2 - 1, 2) * (uScreenResolution / uScreenResolution.x);
     float4 color = tex2D(uImage0, coords);
-    return color * uIntensity;
+
+    return color + pow(color, 1.1) * float4(uColor.rgb, 1) * uIntensity * uOpacity * (1 - length(center));
 }
 
 technique Technique1

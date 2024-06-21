@@ -8,7 +8,7 @@ using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.Graphics;
 using Terraria.ID;
-using WaterEffectsMod.Common;
+using WaterEffectsMod.Common.LiquidAddons;
 
 namespace WaterEffectsMod;
 
@@ -117,7 +117,7 @@ public static class LiquidUtils
     };
     public static void DrawReflectionMapInArea(int left, int right, int top, int bottom, int maxDepth)
     {
-        Effect mapEffect = AllAssets.ReflectionMapEffect.Value;
+        Effect mapEffect = AllAssets.Effect_ReflectionMap.Value;
         mapEffect.Parameters["uDepth"].SetValue(maxDepth);
         Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendStateForReflectionMap, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, mapEffect);
         Vector2 drawOffset = Main.screenPosition;

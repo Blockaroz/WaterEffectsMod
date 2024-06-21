@@ -12,7 +12,7 @@ using Terraria.Graphics.Effects;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace WaterEffectsMod.Common;
+namespace WaterEffectsMod.Common.LiquidAddons;
 
 public abstract class LiquidAddon : ILoadable
 {
@@ -78,7 +78,7 @@ public abstract class LiquidAddon : ILoadable
 
         Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, null);
 
-        Effect cutout = AllAssets.ColorCutoutEffect.Value;
+        Effect cutout = AllAssets.Effect_ColorCutout.Value;
         cutout.Parameters["uCutoutColor"].SetValue(LiquidColor.ToVector4());
         cutout.CurrentTechnique.Passes[0].Apply();
 

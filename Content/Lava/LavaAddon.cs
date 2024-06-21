@@ -11,7 +11,7 @@ using Terraria.Graphics;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.Config;
-using WaterEffectsMod.Common;
+using WaterEffectsMod.Common.LiquidAddons;
 
 namespace WaterEffectsMod.Content.Lava;
 
