@@ -8,15 +8,12 @@ using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.Graphics;
 using Terraria.ID;
-using WaterEffectsMod.Common.LiquidAddons;
+using WaterEffectsMod.Common;
 
 namespace WaterEffectsMod;
 
 public static class LiquidUtils
 {
-    public static int DefaultTargetWidth => Main.screenWidth;
-    public static int DefaultTargetHeight => Main.screenHeight;//Main.instance.GraphicsDevice.PresentationParameters.BackBufferHeight + Main.offScreenRange * 2;
-
     public static void GetAreaForDrawing(out int left, out int right, out int top, out int bottom)
     {
         left = (int)Math.Floor(Main.screenPosition.X / 16f - 1);
@@ -115,7 +112,7 @@ public static class LiquidUtils
         ColorBlendFunction = BlendFunction.Max,
         ColorSourceBlend = Blend.SourceColor
     };
-    public static void DrawReflectionMapInArea(int left, int right, int top, int bottom, int maxDepth)
+    public static void DrawSurfaceMap(int left, int right, int top, int bottom, int maxDepth)
     {
         Effect mapEffect = AllAssets.Effect_ReflectionMap.Value;
         mapEffect.Parameters["uDepth"].SetValue(maxDepth);
@@ -176,12 +173,49 @@ public static class LiquidUtils
     {
         bool incomplete = Main.tile[i, j].LiquidAmount < 255 && Main.tile[i, j].LiquidAmount > 0;
         bool airAbove = Main.tile[i, j].LiquidAmount > 0 && Main.tile[i, j - 1].LiquidAmount <= 0 
-            && (!WorldGen.SolidOrSlopedTile(i, j - 1) || LiquidAddonSystem.blockTypesAllowsReflections.Any(n => n == Main.tile[i, j - 1].TileType));
+            && (!WorldGen.SolidOrSlopedTile(i, j - 1) || blockTypesAllowsReflections.Any(n => n == Main.tile[i, j - 1].TileType));
         return incomplete || airAbove;
     }
 
-    public static Color ReflectionDepthColor(float x)
+    public static readonly List<int> blockTypesAllowsReflections = new List<int>()
     {
-        return Color.White;
+        TileID.Glass,
+        TileID.BreakableIce,
+        TileID.MagicalIceBlock,
+    };
+
+    public static void ApplyMask_Color(Texture2D colorMask, Color color, bool alpha = false)
+    {
+        Effect mask = AllAssets.Effect_ImageMask.Value;
+        mask.Parameters["uMaskAdd"].SetValue(1);
+        mask.Parameters["uMaskSubtract"].SetValue(0);
+        mask.Parameters["uMaskColor"].SetValue(colorMask);
+        mask.Parameters["useAlpha"].SetValue(alpha);
+        mask.Parameters["useColor"].SetValue(true);
+        mask.Parameters["uColor"].SetValue(color.ToVector4());
+        mask.CurrentTechnique.Passes[0].Apply();
+    }
+
+    public static void ApplyMask_Image(Texture2D add, Texture2D subtract, bool alpha = false)
+    {
+        Effect mask = AllAssets.Effect_ImageMask.Value;
+        mask.Parameters["uMaskAdd"].SetValue(add);
+        mask.Parameters["uMaskSubtract"].SetValue(subtract);
+        mask.Parameters["uMaskColor"].SetValue(1);
+        mask.Parameters["useAlpha"].SetValue(alpha);
+        mask.Parameters["useColor"].SetValue(false);
+        mask.CurrentTechnique.Passes[0].Apply();
+    }    
+    
+    public static void ApplyMask_ImageColor(Texture2D add, Texture2D subtract, Texture2D colorMask, Color color, bool alpha = false)
+    {
+        Effect mask = AllAssets.Effect_ImageMask.Value;
+        mask.Parameters["uMaskAdd"].SetValue(add);
+        mask.Parameters["uMaskSubtract"].SetValue(subtract);
+        mask.Parameters["uMaskColor"].SetValue(colorMask);
+        mask.Parameters["useAlpha"].SetValue(alpha);
+        mask.Parameters["useColor"].SetValue(true);
+        mask.Parameters["uColor"].SetValue(color.ToVector4());
+        mask.CurrentTechnique.Passes[0].Apply();
     }
 }

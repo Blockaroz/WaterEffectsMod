@@ -12,17 +12,15 @@ using Terraria.Graphics.Effects;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace WaterEffectsMod.Common.LiquidAddons;
+namespace WaterEffectsMod.Common;
 
 public abstract class LiquidAddon : ILoadable
 {
     public virtual int LiquidType { get; }
 
-    public virtual Color LiquidColor { get; }
+    public virtual Color LiquidColor => LiquidRenderingSystem.GetLiquidMappingColor(LiquidType);
 
     public virtual Mod Mod { get; private set; }
-
-    public virtual bool AddToColorRendering => HasVisuals;
 
     public virtual bool HasVisuals => true;
 
@@ -36,11 +34,6 @@ public abstract class LiquidAddon : ILoadable
         OnLoad();
         LiquidAddonSystem.liquidAddons ??= new List<LiquidAddon>();
         LiquidAddonSystem.liquidAddons.Add(this);
-        if (AddToColorRendering)
-        {
-            LiquidAddonSystem.liquidColors ??= new Dictionary<int, Color>();
-            LiquidAddonSystem.liquidColors.Add(LiquidType, LiquidColor);
-        }
     }
 
     public virtual void Update() { }
@@ -51,25 +44,18 @@ public abstract class LiquidAddon : ILoadable
     {
     }
 
-    public void CreateAndDrawTarget()
+    public void InitTarget(int width, int height)
     {
-        int width = LiquidUtils.DefaultTargetWidth;
-        int height = LiquidUtils.DefaultTargetHeight;
-        if (overlayTarget == null || width != currentWidth || height != currentHeight)
-        {
-            overlayTarget = new RenderTarget2D(Main.instance.GraphicsDevice, width, height, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None);
-            currentWidth = width;
-            currentHeight = height;
-            return;
-        }
+        overlayTarget = new RenderTarget2D(Main.instance.GraphicsDevice, width, height, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None);
+    }
 
-        DrawTarget();
+    public void ReleaseTarget()
+    {
+        overlayTarget?.Dispose();
+        overlayTarget = null;
     }
 
     public RenderTarget2D overlayTarget;
-
-    public int currentWidth;
-    public int currentHeight;
 
     public virtual void DrawTarget()
     {
@@ -78,11 +64,9 @@ public abstract class LiquidAddon : ILoadable
 
         Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, null);
 
-        Effect cutout = AllAssets.Effect_ColorCutout.Value;
-        cutout.Parameters["uCutoutColor"].SetValue(LiquidColor.ToVector4());
-        cutout.CurrentTechnique.Passes[0].Apply();
+        LiquidUtils.ApplyMask_Color(LiquidRenderingSystem.liquidMapTargetNoCut, LiquidColor);
 
-        Main.spriteBatch.Draw(LiquidAddonSystem.liquidOverlayTarget, Vector2.Zero, Color.White);
+        Main.spriteBatch.Draw(LiquidRenderingSystem.liquidMapTarget, Vector2.Zero, Color.White);
 
         Main.spriteBatch.End();
 

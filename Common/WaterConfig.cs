@@ -34,7 +34,10 @@ public class WaterConfig : ModConfig
     [DefaultValue(true)]
     public bool additionalAudioEffects;
 
-    [DefaultValue(LiquidStyles.Water_Shiny)]
+    [DefaultValue(true)]
+    public bool fixLiquidRendering;
+
+    [DefaultValue(LiquidStyles.Water_Mirror)]
     public LiquidStyles waterEffectStyle;
 
     [DefaultValue(LiquidStyles.Lava_Fancy)]

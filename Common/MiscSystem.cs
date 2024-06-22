@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.Graphics.Effects;
 using Terraria.ModLoader;
@@ -27,13 +28,5 @@ public class MiscSystem : ModSystem
             Filters.Scene.Deactivate("WaterEffects:Vibrance");
 
         Filters.Scene["WaterEffects:Vibrance"].GetShader().UseColor(Color.Lerp(Main.ColorOfTheSkies, Color.White, 0.5f)).UseIntensity(WaterConfig.Instance.vibrance);
-
-        if (!Filters.Scene["WaterEffects:Reflections"].Active && WaterConfig.ReflectionsEnabled)
-            Filters.Scene.Activate("WaterEffects:Reflections", default);
-
-        if (Filters.Scene["WaterEffects:Reflections"].Active && !WaterConfig.ReflectionsEnabled)
-            Filters.Scene.Deactivate("WaterEffects:Reflections", default);
-
-        Filters.Scene["WaterDistortion"].GetShader().UseImageScale(Vector2.One * 0.5f).UseImage(AllAssets.Texture_Noise[2].Value);
     }
 }

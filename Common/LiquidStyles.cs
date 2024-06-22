@@ -10,7 +10,6 @@ public enum LiquidStyles
 {
     None = 0,
     Water_Mirror = 0,
-    Water_Shiny = 1,
-    Water_Spring = 2,
+    Water_Spring = 1,
     Lava_Fancy = 0,
 }

@@ -19,11 +19,10 @@ public static class AllAssets
             ModContent.Request<Texture2D>($"{assetPath}/Textures/Noise/LavaNoise_0", AssetRequestMode.ImmediateLoad),
             ModContent.Request<Texture2D>($"{assetPath}/Textures/Noise/LavaNoise_1", AssetRequestMode.ImmediateLoad),
             ModContent.Request<Texture2D>($"{assetPath}/Textures/Noise/WaterNoise_0", AssetRequestMode.ImmediateLoad),
-            ModContent.Request<Texture2D>($"{assetPath}/Textures/Noise/WaterNoise_1", AssetRequestMode.ImmediateLoad),
-            ModContent.Request<Texture2D>($"{assetPath}/Textures/Noise/WaterNoise_2", AssetRequestMode.ImmediateLoad) ];
+            ModContent.Request<Texture2D>($"{assetPath}/Textures/Noise/WaterNoise_1", AssetRequestMode.ImmediateLoad)
+            ];
 
         Effect_BlankScreen = ModContent.Request<Effect>($"{assetPath}/Effects/Screen", AssetRequestMode.ImmediateLoad);
-        Effect_ColorCutout = ModContent.Request<Effect>($"{assetPath}/Effects/ColorCutout", AssetRequestMode.ImmediateLoad);
         Effect_ImageMask = ModContent.Request<Effect>($"{assetPath}/Effects/ImageMask", AssetRequestMode.ImmediateLoad);
 
         Effect_ScreenVibrance = ModContent.Request<Effect>($"{assetPath}/Effects/ScreenVibrance", AssetRequestMode.ImmediateLoad);
@@ -31,16 +30,12 @@ public static class AllAssets
         Effect_ReflectionMap = ModContent.Request<Effect>($"{assetPath}/Effects/ReflectionMapEffect", AssetRequestMode.ImmediateLoad);
         Effect_Reflection = [
             ModContent.Request<Effect>($"{assetPath}/Effects/Reflections/BasicMirror", AssetRequestMode.ImmediateLoad),
-            ModContent.Request<Effect>($"{assetPath}/Effects/Reflections/ShinyWater", AssetRequestMode.ImmediateLoad)
             ];
-
-        ScreenTarget.Load();
     }
 
     public static Asset<Texture2D>[] Texture_Noise;
 
     public static Asset<Effect> Effect_BlankScreen;
-    public static Asset<Effect> Effect_ColorCutout;
     public static Asset<Effect> Effect_ImageMask;
 
     public static Asset<Effect> Effect_ScreenVibrance;

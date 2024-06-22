@@ -41,6 +41,11 @@ Configs: {
 			Label: vibrance
 			Tooltip: ""
 		}
+
+		fixLiquidRendering: {
+			Label: fix Liquid Rendering
+			Tooltip: ""
+		}
 	}
 
 	LiquidStyles: {
