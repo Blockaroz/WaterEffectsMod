@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria.Graphics.Effects;
 using Terraria.ID;
@@ -18,11 +13,24 @@ public class WaterAddon : LiquidAddon
     public override void Update()
     {
         if (!Filters.Scene["WaterEffects:Reflections"].Active && WaterConfig.ReflectionsEnabled)
+        {
             Filters.Scene.Activate("WaterEffects:Reflections", default);
+            Filters.Scene.Deactivate("WaterDistortion");
+        }
 
         if (Filters.Scene["WaterEffects:Reflections"].Active && !WaterConfig.ReflectionsEnabled)
             Filters.Scene.Deactivate("WaterEffects:Reflections", default);
 
-        Filters.Scene["WaterDistortion"].GetShader().UseImageScale(Vector2.One * 0.5f).UseImage(AllAssets.Texture_Noise[2].Value, 2, SamplerState.PointWrap);
+        if (LiquidRenderingSystem.targetsReady)
+        {
+            if (LiquidRenderingSystem.liquidTargets.TryGetValue(LiquidType, out var target))
+            {
+                Filters.Scene["WaterDistortion"].GetShader()
+                    .UseImageScale(new Vector2(0.25f))
+                    .UseImage(AllAssets.Texture_Noise[2].Value)
+                    .UseImage(target, 2, SamplerState.PointClamp)
+                    .UseTargetPosition(Vector2.Zero);
+            }
+        }
     }
 }

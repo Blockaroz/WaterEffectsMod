@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using Terraria;
+using Terraria.Graphics.Effects;
 using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using WaterEffectsMod.Common;
@@ -75,7 +76,8 @@ public class WaterReflectionShaderData : ScreenShaderData
         Main.instance.GraphicsDevice.Clear(Color.Transparent);
 
         Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, null, Main.Transform);
-        //LiquidUtils.ApplyMask_Color(LiquidRenderingSystem.liquidMapTargetNoCut, LiquidRenderingSystem.GetLiquidMappingColor(LiquidID.Water));
+        LiquidUtils.ApplyMask_Color(LiquidRenderingSystem.liquidMapTargetNoCut, LiquidRenderingSystem.GetLiquidMappingColor(LiquidID.Water));
+
         Main.spriteBatch.Draw(LiquidRenderingSystem.liquidMapTarget, Vector2.Zero, LiquidRenderingSystem.liquidMapTarget.Frame(), Color.White, 0, Vector2.Zero, 1, Main.GameViewMatrix.Effects, 0);
         Main.spriteBatch.End();
 
@@ -89,6 +91,7 @@ public class WaterReflectionShaderData : ScreenShaderData
         Main.instance.GraphicsDevice.Clear(Color.Transparent);
 
         Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, null, Main.Transform);
+
         Main.spriteBatch.Draw(_reflectionTargetSwap, Vector2.Zero, LiquidRenderingSystem.liquidMapTarget.Frame(), Color.White, 0, Vector2.Zero, 1, Main.GameViewMatrix.Effects, 0);
         Main.spriteBatch.End();
 
@@ -139,7 +142,7 @@ public class WaterReflectionShaderData : ScreenShaderData
                     effect.Parameters["uScreenCutout"].SetValue(_overlayTarget);
                     effect.Parameters["uReflectionMap"].SetValue(_reflectionTarget);
                     effect.Parameters["uDepth"].SetValue(WaterConfig.Instance.reflectionBlockDepth);
-                    effect.Parameters["uClearness"].SetValue(_clarity * 0.67f);
+                    effect.Parameters["uClearness"].SetValue(_clarity * 0.4f);
                     effect.CurrentTechnique.Passes[0].Apply();
 
                     break;

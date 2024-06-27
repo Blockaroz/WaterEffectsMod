@@ -70,44 +70,6 @@ public class LiquidRenderingSystem : ModSystem
             Main.OnRenderTargetsInitialized += InitTargets;
             Main.OnRenderTargetsReleased += ReleaseTargets;
             IL_Main.DoDraw += ReplaceDrawTarget;
-            IL_WaterShaderData.Apply += ReplaceDistortionFilterTarget;
-        }
-    }
-
-    private void ReplaceDistortionFilterTarget(ILContext il)
-    {
-        try
-        {
-            ILCursor c = new ILCursor(il);
-
-
-        }
-        catch
-        {
-            MonoModHooks.DumpIL(Mod, il);
-            Mod.Logger.Error("Water filter target was unable to be replaced.");
-        }
-    }
-
-    private static Vector2 FilterTargetPos
-    {
-        get
-        {
-            if (FixRendering)
-                return Vector2.Zero;
-            else
-                return Main.sceneWaterPos - Main.screenPosition + new Vector2(Main.screenWidth, Main.screenHeight) * 0.5f * (Vector2.One - Vector2.One / Main.GameViewMatrix.Zoom);
-        }
-    }
-
-    private Texture2D FilterWaterTarget
-    {
-        get
-        {
-            if (FixRendering && targetsReady)
-                return liquidTargets[LiquidID.Water];
-
-            return Main.waterTarget;
         }
     }
 
@@ -139,6 +101,8 @@ public class LiquidRenderingSystem : ModSystem
         {
             foreach (int id in liquidTargets.Keys)
                 Main.spriteBatch.Draw(liquidTargets[id], Vector2.Zero, Color.White);
+
+            Main.spriteBatch.Draw(plantTarget, Vector2.Zero, Color.White);
         }
         else
             Main.spriteBatch.Draw(Main.waterTarget, Main.sceneWaterPos - Main.screenPosition, Color.White);
@@ -150,6 +114,7 @@ public class LiquidRenderingSystem : ModSystem
     public static RenderTarget2D liquidMapTarget;
     public static RenderTarget2D tileMaskTarget;
     public static RenderTarget2D backWaterTargetPosFixed;
+    public static RenderTarget2D plantTarget;
     public static Dictionary<int, RenderTarget2D> liquidTargets;
 
     private static float _waterAlpha;
@@ -164,6 +129,7 @@ public class LiquidRenderingSystem : ModSystem
             liquidMapTargetNoCut = new RenderTarget2D(Main.instance.GraphicsDevice, width, height, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None);
             tileMaskTarget = new RenderTarget2D(Main.instance.GraphicsDevice, width, height, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None);
             backWaterTargetPosFixed = new RenderTarget2D(Main.instance.GraphicsDevice, width, height, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None);
+            plantTarget = new RenderTarget2D(Main.instance.GraphicsDevice, width, height, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None);
 
             liquidColors = new Dictionary<int, Color>();
             liquidTargets = new Dictionary<int, RenderTarget2D>();
@@ -187,7 +153,6 @@ public class LiquidRenderingSystem : ModSystem
     private void ReleaseTargets()
     {
         targetsReady = false;
-
         liquidTargets = new Dictionary<int, RenderTarget2D>();
 
         try
@@ -196,6 +161,7 @@ public class LiquidRenderingSystem : ModSystem
             liquidMapTargetNoCut?.Dispose();
             tileMaskTarget?.Dispose();
             backWaterTargetPosFixed?.Dispose();
+            plantTarget?.Dispose();
             foreach (RenderTarget2D target in liquidTargets.Values)
                 target.Dispose();
         }
@@ -208,6 +174,7 @@ public class LiquidRenderingSystem : ModSystem
         liquidMapTargetNoCut = null;
         tileMaskTarget = null;
         backWaterTargetPosFixed = null;
+        plantTarget = null;
     }
 
     private void DrawLiquids(On_Main.orig_CheckMonoliths orig)
@@ -226,6 +193,7 @@ public class LiquidRenderingSystem : ModSystem
             LiquidUtils.GetAreaForDrawing(out int left, out int right, out int top, out int bottom);
 
             HashSet<Point> tileMaskPoints = new HashSet<Point>();
+            HashSet<Point> waterPlants = new HashSet<Point>();
 
             for (int i = left; i < right; i++)
             {
@@ -321,10 +289,23 @@ public class LiquidRenderingSystem : ModSystem
                             tileMaskPoints.Add(new Point(i, j));
                         }
                     }
+
+                    if (Main.tile[i, j].HasTile && Main.tile[i, j].TileType == TileID.LilyPad)
+                        waterPlants.Add(new Point(i, j));
                 }
             }
 
             Main.tileBatch.End();
+
+            Main.instance.GraphicsDevice.SetRenderTarget(plantTarget);
+            Main.instance.GraphicsDevice.Clear(Color.Transparent);
+
+            Main.spriteBatch.Begin();
+
+            foreach (Point point in waterPlants)
+                Main.DrawTileInWater(-drawOffset, point.X, point.Y);
+
+            Main.spriteBatch.End();
 
             Main.instance.GraphicsDevice.SetRenderTarget(tileMaskTarget);
             Main.instance.GraphicsDevice.Clear(Color.Transparent);
@@ -335,6 +316,9 @@ public class LiquidRenderingSystem : ModSystem
                 if (WorldGen.InWorld(point.X, point.Y, 1))
                     LiquidUtils.DrawSingleTile(point.X, point.Y, drawOffset);
             }
+
+            Main.tileBatch.Draw(plantTarget, Vector2.Zero, new VertexColors(Color.White));
+
             Main.tileBatch.End();
 
             Main.instance.GraphicsDevice.SetRenderTarget(backWaterTargetPosFixed);
@@ -373,7 +357,7 @@ public class LiquidRenderingSystem : ModSystem
 
     public override void PostUpdateDusts()
     {
-        _waterAlpha = 0.5f;
+        _waterAlpha = 0.75f;
         _shimmerAlpha = 0.75f;
     }
 
