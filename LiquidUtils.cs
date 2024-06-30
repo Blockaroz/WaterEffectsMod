@@ -233,4 +233,6 @@ public static class LiquidUtils
         mask.Parameters["uColor"].SetValue(color.ToVector4());
         mask.CurrentTechnique.Passes[0].Apply();
     }
+
+    public static bool HasIncompatibleRenderMods() => ModLoader.HasMod("StarlightRiver");
 }

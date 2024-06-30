@@ -18,7 +18,7 @@ namespace WaterEffectsMod.Common;
 
 public class LiquidRenderFixSystem : ModSystem
 {
-    private static bool FixRendering => WaterConfig.Instance.fixLiquidRendering;
+    private static bool FixRendering => WaterConfig.Instance.fixLiquidRendering && !ModLoader.HasMod("StarlightRiver"); // THIS MOD MESSES WITH WATER A LOT WHAT
 
     public static readonly float[] DEFAULT_LIQUID_OPACITY = [
         0.6f,

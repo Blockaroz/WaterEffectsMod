@@ -65,6 +65,6 @@ public class WaterAddon : LiquidAddon
 
     public override void Draw()
     {
-        //Main.spriteBatch.Draw(LiquidRenderingSystem.liquidMapTargetNoCut, Vector2.Zero, Color.White);
+        Main.spriteBatch.Draw(LiquidRenderingSystem.liquidMapTargetNoCut, Vector2.Zero, Color.Red);
     }
 }
