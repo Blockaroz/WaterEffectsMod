@@ -64,13 +64,14 @@ public abstract class LiquidAddon : ILoadable
 
         Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, null);
 
-        LiquidUtils.ApplyMask_Color(LiquidRenderingSystem.liquidMapTargetNoCut, LiquidColor);
+        LiquidUtils.ApplyMask_Image(LiquidRenderingSystem.liquidTargets[LiquidType], null);
 
         Main.spriteBatch.Draw(LiquidRenderingSystem.liquidMapTarget, Vector2.Zero, Color.White);
 
         Main.spriteBatch.End();
 
         Main.instance.GraphicsDevice.SetRenderTarget(null);
+        Main.instance.GraphicsDevice.Clear(Color.Transparent);
     }
 
     public virtual void Draw() { }

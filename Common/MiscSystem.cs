@@ -22,11 +22,14 @@ public class MiscSystem : ModSystem
     {
         orig();
 
-        if (!Filters.Scene["WaterEffects:Vibrance"].Active && WaterConfig.ScreenVibranceEnabled)
-            Filters.Scene.Activate("WaterEffects:Vibrance", default);
-        if (Filters.Scene["WaterEffects:Vibrance"].Active && !WaterConfig.ScreenVibranceEnabled)
-            Filters.Scene.Deactivate("WaterEffects:Vibrance");
+        if (Filters.Scene["WaterEffects:Vibrance"] != null)
+        {
+            if (!Filters.Scene["WaterEffects:Vibrance"].Active && WaterConfig.ScreenVibranceEnabled)
+                Filters.Scene.Activate("WaterEffects:Vibrance", default);
+            if (Filters.Scene["WaterEffects:Vibrance"].Active && !WaterConfig.ScreenVibranceEnabled)
+                Filters.Scene.Deactivate("WaterEffects:Vibrance");
 
-        Filters.Scene["WaterEffects:Vibrance"].GetShader().UseColor(Color.Lerp(Main.ColorOfTheSkies, Color.White, 0.5f)).UseIntensity(WaterConfig.Instance.vibrance);
+            Filters.Scene["WaterEffects:Vibrance"].GetShader().UseColor(Color.Lerp(Main.ColorOfTheSkies, Color.White, 0.5f)).UseIntensity(WaterConfig.Instance.vibrance);
+        }
     }
 }

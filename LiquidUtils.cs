@@ -6,8 +6,10 @@ using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.GameContent;
+using Terraria.GameContent.Liquid;
 using Terraria.Graphics;
 using Terraria.ID;
+using Terraria.ModLoader;
 using WaterEffectsMod.Common;
 
 namespace WaterEffectsMod;
@@ -112,12 +114,15 @@ public static class LiquidUtils
         ColorBlendFunction = BlendFunction.Max,
         ColorSourceBlend = Blend.SourceColor
     };
+
     public static void DrawSurfaceMap(int left, int right, int top, int bottom, int maxDepth)
     {
         Effect mapEffect = AllAssets.Effect_ReflectionMap.Value;
         mapEffect.Parameters["uDepth"].SetValue(maxDepth);
+        mapEffect.Parameters["uWidth"].SetValue((16 * 3f + 4) / 16f);
         Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendStateForReflectionMap, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, mapEffect);
         Vector2 drawOffset = Main.screenPosition;
+
         for (int i = left; i < right; i++)
         {
             for (int j = top; j < bottom; j++)
@@ -126,6 +131,9 @@ public static class LiquidUtils
                     continue;
                 if (!WorldGen.InWorld(i, j - 1))
                     continue;
+                if (Lighting.GetSubLight(new Vector2(i, j)).Length() <= 0.1f)
+                    continue;
+
                 int currentJ = j;
                 if (j == top && Main.tile[i, j].LiquidAmount >= 255)
                 {
@@ -159,7 +167,7 @@ public static class LiquidUtils
                     int liquidHeight = (int)Math.Clamp(Main.tile[i, currentJ].LiquidAmount / 255f * 16f, 2, 16) + 1;
                     int trueDepth = Math.Min(poolDepth * 16 + liquidHeight, maxDepth * 16);
 
-                    Main.spriteBatch.Draw(TextureAssets.BlackTile.Value, new Vector2(i * 16 - 14, currentJ * 16 + 16 - liquidHeight - 2) - drawOffset, new Rectangle(0, 0, 16 * 3 - 4, trueDepth), new Color(255, 255, 255, 0));
+                    Main.spriteBatch.Draw(TextureAssets.BlackTile.Value, new Vector2(i * 16 - 18, currentJ * 16 + 16 - liquidHeight - 2) - drawOffset, new Rectangle(0, 0, 16 * 3 + 4, trueDepth), new Color(255, 255, 255, 0));
 
                     currentJ += poolDepth;
                 }
@@ -183,6 +191,13 @@ public static class LiquidUtils
         TileID.BreakableIce,
         TileID.MagicalIceBlock,
     };
+
+    public static float[] DefaultLiquidOpacity => [     
+        0.6f,
+        0.95f,
+        0.95f,
+        0.75f
+        ];
 
     public static void ApplyMask_Color(Texture2D colorMask, Color color, bool alpha = false)
     {

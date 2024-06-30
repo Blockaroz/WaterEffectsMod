@@ -1,16 +1,13 @@
 sampler uImage0 : register(s0);
 
 float uDepth;
+float uWidth;
 
 float4 PixelShaderFunction(float4 baseColor : COLOR0, float2 coords : TEXCOORD0) : COLOR0
 {    
-    float p = coords.y / uDepth;
-
-    float r = clamp(p * 2, 0, 1);
-    float g = clamp(lerp(0, 1, p * 2 - 1), 0, 1); 
-    float pb = coords.x / 3;
-    float b = smoothstep(0, 0.34, pb) * smoothstep(0, 0.34, 1.0 - pb);
-    return float4(r, g, b, 1);
+    float pb = coords.x / uWidth;
+    float b = smoothstep(1.0, 2.5 / 3.0, pb) * smoothstep(0, 0.5 / 3.0, pb);
+    return float4(0, 0, b, 1);
 }
 
 technique Technique1

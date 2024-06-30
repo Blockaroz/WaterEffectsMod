@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Humanizer;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Graphics.PackedVector;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using Terraria;
@@ -26,8 +27,6 @@ namespace WaterEffectsMod.Common;
 
 public class LiquidRenderingSystem : ModSystem
 {
-    private static bool FixRendering => WaterConfig.Instance.fixLiquidRendering;
-
     public static Dictionary<int, Color> liquidColors;
 
     public static Color GetAvailableMappingColor()
@@ -70,6 +69,7 @@ public class LiquidRenderingSystem : ModSystem
             Main.OnRenderTargetsInitialized += InitTargets;
             Main.OnRenderTargetsReleased += ReleaseTargets;
             IL_Main.DoDraw += ReplaceDrawTarget;
+
         }
     }
 
@@ -97,7 +97,7 @@ public class LiquidRenderingSystem : ModSystem
 
     private void DrawWater()
     {
-        if (FixRendering && targetsReady)
+        if (WaterConfig.Instance.fixLiquidRendering && targetsReady)
         {
             foreach (int id in liquidTargets.Keys)
                 Main.spriteBatch.Draw(liquidTargets[id], Vector2.Zero, Color.White);
@@ -113,12 +113,10 @@ public class LiquidRenderingSystem : ModSystem
     public static RenderTarget2D liquidMapTargetNoCut;
     public static RenderTarget2D liquidMapTarget;
     public static RenderTarget2D tileMaskTarget;
-    public static RenderTarget2D backWaterTargetPosFixed;
+    public static RenderTarget2D waterTargetPosFixed;
     public static RenderTarget2D plantTarget;
     public static Dictionary<int, RenderTarget2D> liquidTargets;
 
-    private static float _waterAlpha;
-    private static float _shimmerAlpha;
     public static bool targetsReady;
 
     private void InitTargets(int width, int height)
@@ -128,7 +126,7 @@ public class LiquidRenderingSystem : ModSystem
             liquidMapTarget = new RenderTarget2D(Main.instance.GraphicsDevice, width, height, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None);
             liquidMapTargetNoCut = new RenderTarget2D(Main.instance.GraphicsDevice, width, height, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None);
             tileMaskTarget = new RenderTarget2D(Main.instance.GraphicsDevice, width, height, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None);
-            backWaterTargetPosFixed = new RenderTarget2D(Main.instance.GraphicsDevice, width, height, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None);
+            waterTargetPosFixed = new RenderTarget2D(Main.instance.GraphicsDevice, width, height, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None);
             plantTarget = new RenderTarget2D(Main.instance.GraphicsDevice, width, height, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None);
 
             liquidColors = new Dictionary<int, Color>();
@@ -160,7 +158,7 @@ public class LiquidRenderingSystem : ModSystem
             liquidMapTarget?.Dispose();
             liquidMapTargetNoCut?.Dispose();
             tileMaskTarget?.Dispose();
-            backWaterTargetPosFixed?.Dispose();
+            waterTargetPosFixed?.Dispose();
             plantTarget?.Dispose();
             foreach (RenderTarget2D target in liquidTargets.Values)
                 target.Dispose();
@@ -173,9 +171,12 @@ public class LiquidRenderingSystem : ModSystem
         liquidMapTarget = null;
         liquidMapTargetNoCut = null;
         tileMaskTarget = null;
-        backWaterTargetPosFixed = null;
+        waterTargetPosFixed = null;
         plantTarget = null;
     }
+
+    public static HashSet<Point> edgeTiles;
+    public static HashSet<Point> exposedSurfaces;
 
     private void DrawLiquids(On_Main.orig_CheckMonoliths orig)
     {
@@ -192,7 +193,8 @@ public class LiquidRenderingSystem : ModSystem
 
             LiquidUtils.GetAreaForDrawing(out int left, out int right, out int top, out int bottom);
 
-            HashSet<Point> tileMaskPoints = new HashSet<Point>();
+            edgeTiles = new HashSet<Point>();
+            exposedSurfaces = new HashSet<Point>();
             HashSet<Point> waterPlants = new HashSet<Point>();
 
             for (int i = left; i < right; i++)
@@ -201,6 +203,9 @@ public class LiquidRenderingSystem : ModSystem
                 {
                     if (!WorldGen.InWorld(i, j))
                         continue;
+
+                    if (Main.tile[i, j].HasTile && Main.tile[i, j].TileType == TileID.LilyPad)
+                        waterPlants.Add(new Point(i, j));
 
                     int startAmount = Main.tile[i, j].LiquidAmount;
                     int startType = Main.tile[i, j].LiquidType;
@@ -230,6 +235,7 @@ public class LiquidRenderingSystem : ModSystem
                                 }
                                 else
                                 {
+                                    exposedSurfaces.Add(new Point(i, j));
                                     Main.tileBatch.Draw(TextureAssets.BlackTile.Value, new Vector2(i * 16 - extend, j * 16 + 16 - liquidHeight) - drawOffset, new Rectangle(0, 0, 16 + 2 * extend, size + liquidHeight), new VertexColors(liqColor), Vector2.Zero, 1f, 0);
                                     Main.tileBatch.Draw(TextureAssets.BlackTile.Value, new Vector2(i * 16, j * 16 + 16 - liquidHeight) - drawOffset, new Rectangle(0, 0, 16, size + liquidHeight + extend), new VertexColors(liqColor), Vector2.Zero, 1f, 0);
                                 }
@@ -286,12 +292,9 @@ public class LiquidRenderingSystem : ModSystem
                         if (foundValid && TryGetLiquidMappingColor(liquidType, out Color liqColor2))
                         {
                             Main.tileBatch.Draw(TextureAssets.BlackTile.Value, new Vector2(i * 16, j * 16) - drawOffset, new Rectangle(0, 0, 16, 16), new VertexColors(liqColor2), Vector2.Zero, 1f, 0);
-                            tileMaskPoints.Add(new Point(i, j));
+                            edgeTiles.Add(new Point(i, j));
                         }
                     }
-
-                    if (Main.tile[i, j].HasTile && Main.tile[i, j].TileType == TileID.LilyPad)
-                        waterPlants.Add(new Point(i, j));
                 }
             }
 
@@ -311,21 +314,22 @@ public class LiquidRenderingSystem : ModSystem
             Main.instance.GraphicsDevice.Clear(Color.Transparent);
 
             Main.tileBatch.Begin();
-            foreach (Point point in tileMaskPoints)
+            foreach (Point point in edgeTiles)
             {
                 if (WorldGen.InWorld(point.X, point.Y, 1))
                     LiquidUtils.DrawSingleTile(point.X, point.Y, drawOffset);
             }
 
+            //Main.tileBatch.Draw(Main.instance.tileTarget, Main.sceneTilePos - Main.screenPosition, new VertexColors(Color.White));
             Main.tileBatch.Draw(plantTarget, Vector2.Zero, new VertexColors(Color.White));
 
             Main.tileBatch.End();
 
-            Main.instance.GraphicsDevice.SetRenderTarget(backWaterTargetPosFixed);
+            Main.instance.GraphicsDevice.SetRenderTarget(waterTargetPosFixed);
             Main.instance.GraphicsDevice.Clear(Color.Transparent);
 
             Main.spriteBatch.Begin();
-            Main.spriteBatch.Draw(Main.instance.backWaterTarget, Main.sceneBackgroundPos - Main.screenPosition, Color.White);
+            Main.spriteBatch.Draw(Main.waterTarget, Main.sceneWaterPos - Main.screenPosition, Color.White);
             Main.spriteBatch.End();
 
             Main.instance.GraphicsDevice.SetRenderTarget(liquidMapTarget);
@@ -344,7 +348,7 @@ public class LiquidRenderingSystem : ModSystem
                 Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, null);
                 LiquidUtils.ApplyMask_ImageColor(liquidMapTarget, null, liquidMapTargetNoCut, liquidColors[id]);
 
-                Main.spriteBatch.Draw(backWaterTargetPosFixed, Vector2.Zero, Color.White * GetAlphaForLiquid(id));
+                Main.spriteBatch.Draw(waterTargetPosFixed, Vector2.Zero, Color.White);
                 Main.spriteBatch.End();
             }
 
@@ -352,25 +356,6 @@ public class LiquidRenderingSystem : ModSystem
             Main.instance.GraphicsDevice.Clear(Color.Transparent);
 
             LiquidAddonSystem.DrawAddonTargets();
-        }
-    }
-
-    public override void PostUpdateDusts()
-    {
-        _waterAlpha = 0.75f;
-        _shimmerAlpha = 0.75f;
-    }
-
-    public static float GetAlphaForLiquid(int type)
-    {
-        switch (type)
-        {
-            case LiquidID.Water:
-                return _waterAlpha;
-            case LiquidID.Shimmer:
-                return _shimmerAlpha;
-            default:
-                return 1f;
         }
     }
 }

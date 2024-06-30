@@ -19,6 +19,7 @@
 	  <None Remove="Assets\Textures\Noise\WaterNoise_1.png" />
 	</ItemGroup>
 	<ItemGroup>
+	  <Folder Include="Assets\Effects\Edges\" />
 	  <Folder Include="Localization\" />
 	</ItemGroup>
 

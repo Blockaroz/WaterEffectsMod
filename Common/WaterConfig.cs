@@ -13,7 +13,7 @@ public class WaterConfig : ModConfig
 {
     public static WaterConfig Instance => ModContent.GetInstance<WaterConfig>();
 
-    public static bool ReflectionsEnabled => Instance.reflectionBlockDepth > 1 && Instance.waterEffectStyle != LiquidStyles.None;
+    public static bool ReflectionsEnabled => Instance.reflectionBlockDepth > 1;
 
     public static bool ScreenVibranceEnabled => Instance.vibrance > 0f;
 
@@ -36,10 +36,4 @@ public class WaterConfig : ModConfig
 
     [DefaultValue(true)]
     public bool fixLiquidRendering;
-
-    [DefaultValue(LiquidStyles.Water_Mirror)]
-    public LiquidStyles waterEffectStyle;
-
-    [DefaultValue(LiquidStyles.Lava_Fancy)]
-    public LiquidStyles lavaEffectStyle;
 }
