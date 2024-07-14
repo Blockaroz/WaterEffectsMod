@@ -109,6 +109,7 @@ public static class LiquidUtils
             Main.tileBatch.Draw(tileTexture, tilePos + new Vector2(0, bottomOff) - offset, new Rectangle(tile.TileFrameX, tile.TileFrameY + bottomOff, 16, 2), color, Vector2.Zero, 1f, 0);
         }
     }
+
     public static BlendState BlendStateForReflectionMap => new BlendState()
     {
         ColorBlendFunction = BlendFunction.Max,
@@ -131,8 +132,8 @@ public static class LiquidUtils
                     continue;
                 if (!WorldGen.InWorld(i, j - 1))
                     continue;
-                if (Lighting.GetSubLight(new Vector2(i, j)).Length() <= 0.1f)
-                    continue;
+                //if (Lighting.GetSubLight(new Vector2(i, j)).Length() <= 0.1f)
+                //    continue;
 
                 int currentJ = j;
                 if (j == top && Main.tile[i, j].LiquidAmount >= 255)
@@ -165,9 +166,9 @@ public static class LiquidUtils
                     }
 
                     int liquidHeight = (int)Math.Clamp(Main.tile[i, currentJ].LiquidAmount / 255f * 16f, 2, 16) + 1;
-                    int trueDepth = Math.Min(poolDepth * 16 + liquidHeight, maxDepth * 16);
+                    int trueDepth = Math.Min(poolDepth * 16, maxDepth * 16);
 
-                    Main.spriteBatch.Draw(TextureAssets.BlackTile.Value, new Vector2(i * 16 - 18, currentJ * 16 + 16 - liquidHeight - 2) - drawOffset, new Rectangle(0, 0, 16 * 3 + 4, trueDepth), new Color(255, 255, 255, 0));
+                    Main.spriteBatch.Draw(TextureAssets.BlackTile.Value, new Vector2(i * 16 - 18, currentJ * 16 + 16 - liquidHeight) - drawOffset, new Rectangle(0, 0, 16 * 3 + 4, trueDepth), new Color(255, 255, 255, 0));
 
                     currentJ += poolDepth;
                 }
@@ -176,7 +177,6 @@ public static class LiquidUtils
 
         Main.spriteBatch.End();
     }
-
     public static bool IsSurfaceLiquid(int i, int j)
     {
         bool incomplete = Main.tile[i, j].LiquidAmount < 255 && Main.tile[i, j].LiquidAmount > 0;

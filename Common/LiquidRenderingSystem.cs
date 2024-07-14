@@ -1,25 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Humanizer;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Graphics.PackedVector;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using Terraria;
-using Terraria.DataStructures;
 using Terraria.GameContent;
-using Terraria.GameContent.Drawing;
-using Terraria.GameContent.Liquid;
-using Terraria.GameContent.Shaders;
 using Terraria.Graphics;
-using Terraria.Graphics.CameraModifiers;
-using Terraria.Graphics.Effects;
-using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -97,7 +85,7 @@ public class LiquidRenderingSystem : ModSystem
 
     private void DrawWater()
     {
-        if (WaterConfig.Instance.fixLiquidRendering && targetsReady)
+        if (WaterConfig.Instance.unuseed && targetsReady)
         {
             foreach (int id in liquidTargets.Keys)
                 Main.spriteBatch.Draw(liquidTargets[id], Vector2.Zero, Color.White);
@@ -204,12 +192,16 @@ public class LiquidRenderingSystem : ModSystem
                     if (!WorldGen.InWorld(i, j))
                         continue;
 
-                    if (Main.tile[i, j].HasTile && Main.tile[i, j].TileType == TileID.LilyPad)
-                        waterPlants.Add(new Point(i, j));
+                    if (Main.tile[i, j].HasTile)
+                    {
+                        if (Main.tile[i, j].TileType == TileID.LilyPad)
+                            waterPlants.Add(new Point(i, j));
+
+                    }
 
                     int startAmount = Main.tile[i, j].LiquidAmount;
                     int startType = Main.tile[i, j].LiquidType;
-                    if (Main.tile[i, j].LiquidAmount > 0 && TryGetLiquidMappingColor(startType, out Color liqColor))
+                    if (Main.tile[i, j].LiquidAmount > 0 && TryGetLiquidMappingColor(startType, out Color liquidColor))
                     {
                         int k = 0;
                         while (true)
@@ -221,6 +213,9 @@ public class LiquidRenderingSystem : ModSystem
                                 stop = true;
                             }
 
+                            if (Main.tile[i, j + k].HasTile && Main.tile[i, j + k].TileType == TileID.Grate)
+                                edgeTiles.Add(new Point(i, j + k));
+
                             if (Main.tile[i, j + k].LiquidAmount <= 0 || Main.tile[i, j + k].LiquidAmount != startAmount || Main.tile[i, j + k].LiquidType != startType || stop)
                             {
                                 int liquidHeight = Math.Max(4, (int)Math.Ceiling(Main.tile[i, j].LiquidAmount / 255f * 16f));
@@ -230,14 +225,14 @@ public class LiquidRenderingSystem : ModSystem
                                 const int extend = 4;
                                 if (!LiquidUtils.IsSurfaceLiquid(i, j))
                                 {
-                                    Main.tileBatch.Draw(TextureAssets.BlackTile.Value, new Vector2(i * 16 - extend, j * 16 + 16 - liquidHeight) - drawOffset, new Rectangle(0, 0, 16 + 2 * extend, size + liquidHeight), new VertexColors(liqColor), Vector2.Zero, 1f, 0);
-                                    Main.tileBatch.Draw(TextureAssets.BlackTile.Value, new Vector2(i * 16, j * 16 + 16 - liquidHeight - extend) - drawOffset, new Rectangle(0, 0, 16, size + liquidHeight + 2 * extend), new VertexColors(liqColor), Vector2.Zero, 1f, 0);
+                                    Main.tileBatch.Draw(TextureAssets.BlackTile.Value, new Vector2(i * 16 - extend, j * 16 + 16 - liquidHeight) - drawOffset, new Rectangle(0, 0, 16 + 2 * extend, size + liquidHeight), new VertexColors(liquidColor), Vector2.Zero, 1f, 0);
+                                    Main.tileBatch.Draw(TextureAssets.BlackTile.Value, new Vector2(i * 16, j * 16 + 16 - liquidHeight - extend) - drawOffset, new Rectangle(0, 0, 16, size + liquidHeight + 2 * extend), new VertexColors(liquidColor), Vector2.Zero, 1f, 0);
                                 }
                                 else
                                 {
                                     exposedSurfaces.Add(new Point(i, j));
-                                    Main.tileBatch.Draw(TextureAssets.BlackTile.Value, new Vector2(i * 16 - extend, j * 16 + 16 - liquidHeight) - drawOffset, new Rectangle(0, 0, 16 + 2 * extend, size + liquidHeight), new VertexColors(liqColor), Vector2.Zero, 1f, 0);
-                                    Main.tileBatch.Draw(TextureAssets.BlackTile.Value, new Vector2(i * 16, j * 16 + 16 - liquidHeight) - drawOffset, new Rectangle(0, 0, 16, size + liquidHeight + extend), new VertexColors(liqColor), Vector2.Zero, 1f, 0);
+                                    Main.tileBatch.Draw(TextureAssets.BlackTile.Value, new Vector2(i * 16 - extend, j * 16 + 16 - liquidHeight) - drawOffset, new Rectangle(0, 0, 16 + 2 * extend, size + liquidHeight), new VertexColors(liquidColor), Vector2.Zero, 1f, 0);
+                                    Main.tileBatch.Draw(TextureAssets.BlackTile.Value, new Vector2(i * 16, j * 16 + 16 - liquidHeight) - drawOffset, new Rectangle(0, 0, 16, size + liquidHeight + extend), new VertexColors(liquidColor), Vector2.Zero, 1f, 0);
                                 }
 
                                 j += k - 1;
@@ -251,48 +246,104 @@ public class LiquidRenderingSystem : ModSystem
                     if (WorldGen.SolidOrSlopedTile(i, j))
                     {
                         int liquidType = -1;
-                        bool foundValid = false;
+                        int liquidAmount = 0;
+                        bool onRight = false;
+                        bool onLeft = false;
+                        bool onTop = false;
+                        bool onBottom = false;
+                        Vector2 liquidPos = new Vector2(i * 16, j * 16);
+                        Rectangle liquidFrame = new Rectangle(0, 4, 16, 16);
 
-                        if (WorldGen.InWorld(i, j + 1))
+                        if (Main.tile[i, j + 1].LiquidAmount >= 240) // basically guarantees a full liquid block
                         {
-                            if (Main.tile[i, j + 1].LiquidAmount >= 255)
-                            {
-                                liquidType = Main.tile[i, j + 1].LiquidType;
-                                foundValid = true;
-                            }
+                            liquidAmount = 255;
+                            liquidType = Main.tile[i, j + 1].LiquidType;
+                            onBottom = true;
                         }
 
-                        if (WorldGen.InWorld(i, j - 1))
+                        if (Main.tile[i, j - 1].LiquidAmount > 0) // can't really determine how much liquid to have
                         {
-                            if (Main.tile[i, j - 1].LiquidAmount > 0)
-                            {
-                                liquidType = Main.tile[i, j - 1].LiquidType;
-                                foundValid = true;
-                            }
+                            liquidAmount = Math.Max(liquidAmount, Main.tile[i, j].LiquidAmount);
+                            liquidType = Main.tile[i, j - 1].LiquidType;
+                            onTop = true;
                         }
 
-                        if (WorldGen.InWorld(i - 1, j))
+                        if (Main.tile[i - 1, j].LiquidAmount > 0) // copy frome side
                         {
-                            if (Main.tile[i - 1, j].LiquidAmount > 0)
-                            {
-                                liquidType = Main.tile[i - 1, j].LiquidType;
-                                foundValid = true;
-                            }
+                            if (Main.tile[i - 1, j].LiquidAmount < 240)
+                                liquidAmount = Main.tile[i - 1, j].LiquidAmount;
+                            else
+                                liquidAmount = 255;
+
+                            liquidType = Main.tile[i - 1, j].LiquidType;
+                            onLeft = true;
                         }
 
-                        if (WorldGen.InWorld(i + 1, j))
+                        if (Main.tile[i + 1, j].LiquidAmount > 0) // copy frome side
                         {
-                            if (Main.tile[i + 1, j].LiquidAmount > 0)
-                            {
-                                liquidType = Main.tile[i + 1, j].LiquidType;
-                                foundValid = true;
-                            }
+                            if (Main.tile[i + 1, j].LiquidAmount < 240)
+                                liquidAmount = Main.tile[i + 1, j].LiquidAmount;
+                            else
+                                liquidAmount = 255;
+
+                            liquidType = Main.tile[i + 1, j].LiquidType;
+                            onRight = true;
                         }
 
-                        if (foundValid && TryGetLiquidMappingColor(liquidType, out Color liqColor2))
+                        if ((onLeft || onRight || onTop || onBottom) && TryGetLiquidMappingColor(liquidType, out Color liquidColor2))
                         {
-                            Main.tileBatch.Draw(TextureAssets.BlackTile.Value, new Vector2(i * 16, j * 16) - drawOffset, new Rectangle(0, 0, 16, 16), new VertexColors(liqColor2), Vector2.Zero, 1f, 0);
+                            if (Main.tile[i, j - 1].Slope != 0)
+                            {
+                                liquidFrame.Height -= 4;
+                                liquidPos.Y += 4;
+                            }
+
+                            if (Main.tile[i, j].IsHalfBlock)
+                            {
+                                if (!onTop && (onLeft || onRight))
+                                {
+                                    liquidFrame.Y = 0;
+                                    liquidFrame.Height = (int)(liquidAmount / 255f * 16f);
+                                    liquidPos.Y += 15 - liquidAmount / 16;
+                                }
+                            }
+                            else
+                            {
+                                if (Main.tile[i, j].Slope == 0)
+                                {
+                                    if (onTop && !(onBottom || onLeft || onRight))
+                                        liquidFrame.Height = 8;
+
+                                    if (onBottom && !(onTop || onLeft || onRight))
+                                    {
+                                        liquidFrame.Height = 8;
+                                        liquidPos.Y += 8;
+                                    }
+
+                                    if (onLeft && !(onTop || onBottom || onRight))
+                                        liquidFrame.Width = 8;
+
+                                    if (onRight && !(onTop || onBottom || onLeft))
+                                    {
+                                        liquidFrame.Width = 8;
+                                        liquidPos.X += 8;
+                                    }
+                                }
+                                else if (!onBottom)
+                                    liquidFrame.Height += 4;
+
+                                if ((onLeft || onRight) && !onTop && !onBottom)
+                                {
+                                    liquidFrame.Y = 0;
+                                    liquidFrame.Height += (int)(liquidAmount / 255f * 16f) - 16;
+                                    liquidPos.Y += 15 - (int)(liquidAmount / 255f * 16f);
+                                }
+                            }
+
+                            Main.tileBatch.Draw(TextureAssets.BlackTile.Value, liquidPos - drawOffset, liquidFrame, new VertexColors(liquidColor2), Vector2.Zero, 1f, 0);
                             edgeTiles.Add(new Point(i, j));
+                            if (Main.tile[i, j].Slope != 0 && Main.tile[i, j + 1].HasTile && !Main.tile[i, j + 1].IsHalfBlock)
+                                edgeTiles.Add(new Point(i, j + 1));
                         }
                     }
                 }
@@ -315,10 +366,7 @@ public class LiquidRenderingSystem : ModSystem
 
             Main.tileBatch.Begin();
             foreach (Point point in edgeTiles)
-            {
-                if (WorldGen.InWorld(point.X, point.Y, 1))
-                    LiquidUtils.DrawSingleTile(point.X, point.Y, drawOffset);
-            }
+                LiquidUtils.DrawSingleTile(point.X, point.Y, drawOffset);
 
             //Main.tileBatch.Draw(Main.instance.tileTarget, Main.sceneTilePos - Main.screenPosition, new VertexColors(Color.White));
             Main.tileBatch.Draw(plantTarget, Vector2.Zero, new VertexColors(Color.White));
@@ -329,7 +377,7 @@ public class LiquidRenderingSystem : ModSystem
             Main.instance.GraphicsDevice.Clear(Color.Transparent);
 
             Main.spriteBatch.Begin();
-            Main.spriteBatch.Draw(Main.waterTarget, Main.sceneWaterPos - Main.screenPosition, Color.White);
+            Main.spriteBatch.Draw(Main.instance.backWaterTarget, Main.sceneBackgroundPos - Main.screenPosition, Color.White);
             Main.spriteBatch.End();
 
             Main.instance.GraphicsDevice.SetRenderTarget(liquidMapTarget);

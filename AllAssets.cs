@@ -29,7 +29,7 @@ public static class AllAssets
        
         Effect_ReflectionMap = ModContent.Request<Effect>($"{assetPath}/Effects/ReflectionMapEffect", AssetRequestMode.ImmediateLoad);
         Effect_Reflection = [
-            ModContent.Request<Effect>($"{assetPath}/Effects/Reflections/BasicMirror", AssetRequestMode.ImmediateLoad),
+            ModContent.Request<Effect>($"{assetPath}/Effects/Reflections/Mirror", AssetRequestMode.ImmediateLoad),
             ];
     }
 

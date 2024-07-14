@@ -3,4 +3,4 @@ author = Blockaroz
 version = 0.5
 includeSource = true
 side = Client
-loadAfter = CalamityMod, StarlightRiver
+loadAfter = CalamityMod, StarlightRiver, BiomeLava

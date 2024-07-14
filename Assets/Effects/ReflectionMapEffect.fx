@@ -5,9 +5,13 @@ float uWidth;
 
 float4 PixelShaderFunction(float4 baseColor : COLOR0, float2 coords : TEXCOORD0) : COLOR0
 {    
-    float pb = coords.x / uWidth;
-    float b = smoothstep(1.0, 2.5 / 3.0, pb) * smoothstep(0, 0.5 / 3.0, pb);
-    return float4(0, 0, b, 1);
+    float p = coords.y / 16.0;
+
+    float r = p;
+    float g = max(p - 1, 0);
+    float pb = coords.x / 3;
+    float b = smoothstep(0, 0.34, pb) * smoothstep(0, 0.34, 1.0 - pb);
+    return float4(r, g, b, 1);
 }
 
 technique Technique1

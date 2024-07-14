@@ -23,7 +23,7 @@ public class WaterConfig : ModConfig
     public float vibrance;        
     
     [DefaultValue(true)]
-    public bool movementFizz;    
+    public bool movementFizz;
     
     [DefaultValue(true)]
     public bool ambientFizz;
@@ -34,6 +34,7 @@ public class WaterConfig : ModConfig
     [DefaultValue(true)]
     public bool additionalAudioEffects;
 
-    [DefaultValue(true)]
-    public bool fixLiquidRendering;
+    //REMOVE
+    [DefaultValue(false)]
+    public bool unuseed;
 }

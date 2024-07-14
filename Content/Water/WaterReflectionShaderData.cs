@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using Terraria;
+using Terraria.GameContent;
 using Terraria.Graphics.Effects;
 using Terraria.Graphics.Shaders;
 using Terraria.ID;
@@ -33,9 +34,9 @@ public class WaterReflectionShaderData : ScreenShaderData
     {
         try
         {
-            _overlayTarget = new RenderTarget2D(Main.instance.GraphicsDevice, width, height, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None);
-            _reflectionTargetSwap = new RenderTarget2D(Main.instance.GraphicsDevice, width, height, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None);
-            _reflectionTarget = new RenderTarget2D(Main.instance.GraphicsDevice, width, height, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None);
+            _overlayTarget = new RenderTarget2D(Main.instance.GraphicsDevice, width, height, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None, 1, RenderTargetUsage.PreserveContents);
+            _reflectionTargetSwap = new RenderTarget2D(Main.instance.GraphicsDevice, width, height, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None, 1, RenderTargetUsage.PreserveContents);
+            _reflectionTarget = new RenderTarget2D(Main.instance.GraphicsDevice, width, height, mipMap: false, Main.instance.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None, 1, RenderTargetUsage.PreserveContents);
             _targetsReady = true;
         }
         catch (Exception ex)
@@ -76,23 +77,19 @@ public class WaterReflectionShaderData : ScreenShaderData
         Main.instance.GraphicsDevice.Clear(Color.Transparent);
 
         Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, null);
-        LiquidUtils.ApplyMask_Color(LiquidRenderingSystem.liquidMapTargetNoCut, LiquidRenderingSystem.GetLiquidMappingColor(LiquidID.Lava));
-        Main.spriteBatch.Draw(LiquidRenderingSystem.liquidMapTarget, Vector2.Zero, LiquidRenderingSystem.liquidMapTarget.Frame(), Color.White, 0, Vector2.Zero, 1, Main.GameViewMatrix.Effects, 0);    
+        LiquidUtils.ApplyMask_Image(LiquidRenderingSystem.liquidTargets[LiquidID.Water], null);
+        Main.spriteBatch.Draw(LiquidRenderingSystem.liquidMapTarget, Vector2.Zero, LiquidRenderingSystem.liquidMapTarget.Frame(), Color.White, 0, Vector2.Zero, 1, 0, 0);
         Main.spriteBatch.End();
 
         Main.instance.GraphicsDevice.SetRenderTarget(_reflectionTargetSwap);
         Main.instance.GraphicsDevice.Clear(Color.Transparent);
-
         LiquidUtils.GetAreaForDrawing(out int left, out int right, out int top, out int bottom);
         LiquidUtils.DrawSurfaceMap(left, right, top, bottom, WaterConfig.Instance.reflectionBlockDepth);
-
+        
         Main.instance.GraphicsDevice.SetRenderTarget(_reflectionTarget);
         Main.instance.GraphicsDevice.Clear(Color.Transparent);
-
-        Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, null, Main.Transform);
-        LiquidUtils.ApplyMask_Image(_overlayTarget, null);
-
-        Main.spriteBatch.Draw(_reflectionTargetSwap, Vector2.Zero, LiquidRenderingSystem.liquidMapTarget.Frame(), Color.White, 0, Vector2.Zero, 1, Main.GameViewMatrix.Effects, 0);
+        Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, null);
+        Main.spriteBatch.Draw(_reflectionTargetSwap, Vector2.Zero, LiquidRenderingSystem.liquidMapTarget.Frame(), Color.White, 0, Vector2.Zero, 1, 0, 0);
         Main.spriteBatch.End();
 
         Main.instance.GraphicsDevice.SetRenderTarget(null);
@@ -108,6 +105,9 @@ public class WaterReflectionShaderData : ScreenShaderData
 
         if (Main.LocalPlayer.ZoneShimmer)
             clarityTarget = 0.6f;
+
+        if (Main.LocalPlayer.ZoneJungle)
+            clarityTarget = 0.5f;
 
         if (Main.LocalPlayer.ZoneWaterCandle)
             clarityTarget *= 0.65f;
@@ -130,15 +130,12 @@ public class WaterReflectionShaderData : ScreenShaderData
             Effect effect = _shaders[0].Value;
             effect.Parameters["uOpacity"]?.SetValue(CombinedOpacity);
             effect.Parameters["uTime"]?.SetValue(Main.GlobalTimeWrappedHourly);
-            effect.Parameters["uScreenPosition"]?.SetValue(screenCenter - offscreen);
-            effect.Parameters["uZoom"]?.SetValue(Main.GameViewMatrix.Zoom / (screenSize.X / screenSize.Y));
-
+            effect.Parameters["uZoom"].SetValue(Main.GameViewMatrix.Zoom / (screenSize.X / screenSize.Y));
             effect.Parameters["uImageSize"].SetValue(screenSize * 2f);
-            effect.Parameters["uScreenCutout"].SetValue(_overlayTarget);
+            effect.Parameters["uImageCutout"].SetValue(_overlayTarget);
             effect.Parameters["uReflectionMap"].SetValue(_reflectionTarget);
-            effect.Parameters["uDepth"].SetValue(WaterConfig.Instance.reflectionBlockDepth);
-            effect.Parameters["uClearness"].SetValue(_clarity * 0.4f);
-            effect.Parameters["uClearness"].SetValue(1f);
+            effect.Parameters["uDepth"].SetValue(WaterConfig.Instance.reflectionBlockDepth + 1);
+            effect.Parameters["uClearness"].SetValue(_clarity);
             effect.Parameters["debug"].SetValue(false);
             effect.CurrentTechnique.Passes[0].Apply();
         }

@@ -10,9 +10,11 @@
 	<ItemGroup>
 	  <None Remove="Assets\Effects\ImageMask.fx" />
 	  <None Remove="Assets\Effects\LavaCausticEffect - Copy.fx" />
+	  <None Remove="Assets\Effects\Mirror.fx" />
 	  <None Remove="Assets\Effects\MirrorEffect.fx" />
 	  <None Remove="Assets\Effects\ReflectionMapEffect.fx" />
-	  <None Remove="Assets\Effects\Reflections\BasicMirror.fx" />
+	  <None Remove="Assets\Effects\Reflections\JumpFloodShader.fx" />
+	  <None Remove="Assets\Effects\Reflections\Mirror.fx" />
 	  <None Remove="Assets\Effects\Screen.fx" />
 	  <None Remove="Assets\Effects\ScreenVibrance.fx" />
 	  <None Remove="Assets\Textures\Noise\WaterNoise_0.png" />
