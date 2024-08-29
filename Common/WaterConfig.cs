@@ -33,8 +33,4 @@ public class WaterConfig : ModConfig
 
     [DefaultValue(true)]
     public bool additionalAudioEffects;
-
-    //REMOVE
-    [DefaultValue(false)]
-    public bool unuseed;
 }

@@ -85,15 +85,7 @@ public class LiquidRenderingSystem : ModSystem
 
     private void DrawWater()
     {
-        if (WaterConfig.Instance.unuseed && targetsReady)
-        {
-            foreach (int id in liquidTargets.Keys)
-                Main.spriteBatch.Draw(liquidTargets[id], Vector2.Zero, Color.White);
-
-            Main.spriteBatch.Draw(plantTarget, Vector2.Zero, Color.White);
-        }
-        else
-            Main.spriteBatch.Draw(Main.waterTarget, Main.sceneWaterPos - Main.screenPosition, Color.White);
+        Main.spriteBatch.Draw(Main.waterTarget, Main.sceneWaterPos - Main.screenPosition, Color.White);
 
         LiquidAddonSystem.DrawAddons();
     }
