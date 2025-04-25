@@ -16,10 +16,10 @@ public static class AllAssets
     {
         string assetPath = $"{nameof(WaterEffectsMod)}/Assets";
         Texture_Noise = [
-            ModContent.Request<Texture2D>($"{assetPath}/Textures/Noise/LavaNoise_0", AssetRequestMode.ImmediateLoad),
-            ModContent.Request<Texture2D>($"{assetPath}/Textures/Noise/LavaNoise_1", AssetRequestMode.ImmediateLoad),
-            ModContent.Request<Texture2D>($"{assetPath}/Textures/Noise/WaterNoise_0", AssetRequestMode.ImmediateLoad),
-            ModContent.Request<Texture2D>($"{assetPath}/Textures/Noise/WaterNoise_1", AssetRequestMode.ImmediateLoad)
+            ModContent.Request<Texture2D>($"{assetPath}/Textures/Noise/LavaNoise_0"),
+            ModContent.Request<Texture2D>($"{assetPath}/Textures/Noise/LavaNoise_1"),
+            ModContent.Request<Texture2D>($"{assetPath}/Textures/Noise/WaterNoise_0"),
+            ModContent.Request<Texture2D>($"{assetPath}/Textures/Noise/WaterNoise_1")
             ];
 
         Effect_BlankScreen = ModContent.Request<Effect>($"{assetPath}/Effects/Screen", AssetRequestMode.ImmediateLoad);
@@ -28,9 +28,7 @@ public static class AllAssets
         Effect_ScreenVibrance = ModContent.Request<Effect>($"{assetPath}/Effects/ScreenVibrance", AssetRequestMode.ImmediateLoad);
        
         Effect_ReflectionMap = ModContent.Request<Effect>($"{assetPath}/Effects/ReflectionMapEffect", AssetRequestMode.ImmediateLoad);
-        Effect_Reflection = [
-            ModContent.Request<Effect>($"{assetPath}/Effects/Reflections/Mirror", AssetRequestMode.ImmediateLoad),
-            ];
+        Effect_Reflection = ModContent.Request<Effect>($"{assetPath}/Effects/Reflections/WarpedMirror", AssetRequestMode.ImmediateLoad);
     }
 
     public static Asset<Texture2D>[] Texture_Noise;
@@ -41,6 +39,6 @@ public static class AllAssets
     public static Asset<Effect> Effect_ScreenVibrance;
 
     public static Asset<Effect> Effect_ReflectionMap;
-    public static Asset<Effect>[] Effect_Reflection;
+    public static Asset<Effect> Effect_Reflection;
     public static Asset<Effect> Effect_LavaOverlay;
 }

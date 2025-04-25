@@ -8,17 +8,15 @@ using Terraria.GameContent;
 using Terraria.Graphics.Effects;
 using Terraria.Graphics.Shaders;
 using Terraria.ID;
+using Terraria.WorldBuilding;
 using WaterEffectsMod.Common;
 
 namespace WaterEffectsMod.Content.Water;
 
 public class WaterReflectionShaderData : ScreenShaderData
 {
-    private Asset<Effect>[] _shaders;
-
-    public WaterReflectionShaderData(Asset<Effect>[] shaders, string passName) : base(shaders[0], passName)
+    public WaterReflectionShaderData(Asset<Effect> shaders, string passName) : base(shaders, passName)
     {
-        _shaders = shaders;
         Main.OnRenderTargetsInitialized += InitTargets;
         Main.OnRenderTargetsReleased += ReleaseTargets;
         On_Main.CheckMonoliths += DrawTargets;
@@ -127,7 +125,7 @@ public class WaterReflectionShaderData : ScreenShaderData
             Vector2 screenSize = new Vector2(Main.screenWidth, Main.screenHeight) * 0.5f;
             Vector2 screenCenter = Main.screenPosition + screenSize * (Vector2.One - Vector2.One / Main.GameViewMatrix.Zoom);
 
-            Effect effect = _shaders[0].Value;
+            Effect effect = Shader;
             effect.Parameters["uOpacity"]?.SetValue(CombinedOpacity);
             effect.Parameters["uTime"]?.SetValue(Main.GlobalTimeWrappedHourly);
             effect.Parameters["uZoom"].SetValue(Main.GameViewMatrix.Zoom / (screenSize.X / screenSize.Y));

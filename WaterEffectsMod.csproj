@@ -14,7 +14,6 @@
 	  <None Remove="Assets\Effects\MirrorEffect.fx" />
 	  <None Remove="Assets\Effects\ReflectionMapEffect.fx" />
 	  <None Remove="Assets\Effects\Reflections\JumpFloodShader.fx" />
-	  <None Remove="Assets\Effects\Reflections\Mirror.fx" />
 	  <None Remove="Assets\Effects\Screen.fx" />
 	  <None Remove="Assets\Effects\ScreenVibrance.fx" />
 	  <None Remove="Assets\Textures\Noise\WaterNoise_0.png" />
